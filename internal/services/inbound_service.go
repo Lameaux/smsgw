@@ -50,12 +50,12 @@ func (s *InboundService) AckByShortcodeAndID(shortcode, id string) (*models.Inbo
 		return message, err
 	}
 
-	if message.Status == models.InboundMessageStatusAck {
+	if message.Status == models.InboundMessageStatusDelivered {
 		tx.Rollback(ctx)
 		return nil, models.ErrAlreadyAcked
 	}
 
-	message.Status = models.InboundMessageStatusAck
+	message.Status = models.InboundMessageStatusDelivered
 	message.UpdatedAt = utils.Now()
 	err = inboundMessageRepo.UpdateStatus(message)
 	if err != nil {
@@ -63,10 +63,10 @@ func (s *InboundService) AckByShortcodeAndID(shortcode, id string) (*models.Inbo
 		return nil, err
 	}
 
-	inboundNotificationRepo := repos.NewInboundNotificationRepo(tx)
+	notificationRepo := repos.NewDeliveryNotificationRepo(tx)
 
-	n := models.MakeInboundNotification(message)
-	err = inboundNotificationRepo.Save(n)
+	n := models.MakeInboundDeliveryNotification(message)
+	err = notificationRepo.Save(n)
 	if err != nil {
 		tx.Rollback(ctx)
 		return nil, err

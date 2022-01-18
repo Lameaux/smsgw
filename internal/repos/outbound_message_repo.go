@@ -133,7 +133,7 @@ func (r *OutboundMessageRepo) FindByQuery(merchantID string, q *OutboundMessageQ
 	return messages, nil
 }
 
-func (r *OutboundMessageRepo) FindOneForProcessing(status models.OutboundMessageStatus) (*models.OutboundMessage, error) {
+func (r *OutboundMessageRepo) FindOneForProcessing() (*models.OutboundMessage, error) {
 	stmt := selectOutboundMessagesBase + `
 	where status = $1
 	and next_attempt_at < now()
@@ -142,7 +142,7 @@ func (r *OutboundMessageRepo) FindOneForProcessing(status models.OutboundMessage
 	`
 	ctx, cancel := DBQueryContext()
 	defer cancel()
-	row := r.db.QueryRow(ctx, stmt, status)
+	row := r.db.QueryRow(ctx, stmt, models.OutboundMessageStatusNew)
 
 	var om models.OutboundMessage
 	switch err := scanOutboundMessage(row, &om); err {

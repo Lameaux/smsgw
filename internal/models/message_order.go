@@ -6,8 +6,6 @@ import (
 	"euromoby.com/smsgw/internal/utils"
 )
 
-type MessageOrderStatus string
-
 type MessageOrder struct {
 	ID                  string    `json:"id"`
 	MerchantID          string    `json:"-"`

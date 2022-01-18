@@ -8,13 +8,14 @@ CREATE TABLE "message_orders" (
     "sender" varchar(15),
     "body" text  NOT NULL,
     "client_transaction_id" varchar(36),
-    "notification_url" varchar(2000),
+    "notification_url" text,
     "created_at" timestamp NOT NULL,
     "updated_at" timestamp NOT NULL
 );
 
 CREATE INDEX "message_orders_merchant_id_and_created_at" ON "message_orders" ( "merchant_id", "created_at" );
-CREATE UNIQUE INDEX "message_orders_client_transaction_id" ON "message_orders" ( "merchant_id", "client_transaction_id" ) WHERE "client_transaction_id" IS NOT NULL;
+CREATE UNIQUE INDEX "message_orders_client_transaction_id" ON "message_orders" ( "merchant_id", "client_transaction_id" )
+WHERE "client_transaction_id" IS NOT NULL;
 -- +goose StatementEnd
 
 -- +goose Down

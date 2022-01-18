@@ -9,10 +9,10 @@ import (
 type OutboundMessageStatus string
 
 const (
-	OutboundMessageStatusNew       OutboundMessageStatus = "new"
-	OutboundMessageStatusFailed    OutboundMessageStatus = "failed"
-	OutboundMessageStatusSent      OutboundMessageStatus = "sent"
-	OutboundMessageStatusDelivered OutboundMessageStatus = "delivered"
+	OutboundMessageStatusNew       OutboundMessageStatus = "n"
+	OutboundMessageStatusFailed    OutboundMessageStatus = "f"
+	OutboundMessageStatusSent      OutboundMessageStatus = "s"
+	OutboundMessageStatusDelivered OutboundMessageStatus = "d"
 )
 
 type OutboundMessage struct {

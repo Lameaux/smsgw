@@ -13,10 +13,6 @@ import (
 	"euromoby.com/smsgw/internal/workers"
 )
 
-const (
-	workersCount = 2
-)
-
 func main() {
 	app := config.NewAppConfig()
 	connectorRepo := connectors.NewConnectorRepository()
@@ -31,27 +27,32 @@ func startWorkers(app *config.AppConfig, c *connectors.ConnectorRepository) {
 	sigChannel := make(chan os.Signal, 1)
 	signal.Notify(sigChannel, os.Interrupt, syscall.SIGTERM)
 
-	ow, err := workers.NewOutboundWorker(app, c)
-	if err != nil {
-		logger.Fatal(err)
+	ow := workers.NewOutboundMessageWorker(app, c)
+
+	runners := []*workers.Runner{
+		workers.NewRunner(ow),
+		workers.NewRunner(ow),
+		workers.NewRunner(ow),
 	}
 
 	var wg sync.WaitGroup
+	wg.Add(len(runners))
 
-	wg.Add(workersCount)
-
-	for i := 0; i < workersCount; i++ {
-		go func() {
+	for _, r := range runners {
+		go func(r *workers.Runner) {
 			defer wg.Done()
 
-			ow.Run()
-		}()
+			r.Start()
+		}(r)
 	}
 
 	go func() {
 		<-sigChannel
 		logger.Infow("The interrupt received. Waiting for workers to stop....")
-		ow.Terminate()
+
+		for _, r := range runners {
+			r.Stop()
+		}
 
 		wg.Wait()
 		logger.Infow("Workers stopped.")

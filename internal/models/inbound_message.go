@@ -5,8 +5,10 @@ import "time"
 type InboundMessageStatus string
 
 const (
-	InboundMessageStatusNew InboundMessageStatus = "new"
-	InboundMessageStatusAck InboundMessageStatus = "ack"
+	InboundMessageStatusNew       InboundMessageStatus = "n"
+	InboundMessageStatusFailed    InboundMessageStatus = "f"
+	InboundMessageStatusSent      InboundMessageStatus = "s"
+	InboundMessageStatusDelivered InboundMessageStatus = "d"
 )
 
 type InboundMessage struct {

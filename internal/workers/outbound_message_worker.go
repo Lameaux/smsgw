@@ -13,54 +13,24 @@ import (
 
 const (
 	defaultSender = "SMSGW"
+	name          = "OutboundMessageWorker"
 )
 
-type OutboundWorker struct {
+type OutboundMessageWorker struct {
 	app            *config.AppConfig
 	connectorsRepo *connectors.ConnectorRepository
-	done           chan bool
 }
 
-func NewOutboundWorker(app *config.AppConfig, connectorsRepo *connectors.ConnectorRepository) (*OutboundWorker, error) {
-	worker := OutboundWorker{
+func NewOutboundMessageWorker(app *config.AppConfig, connectorsRepo *connectors.ConnectorRepository) *OutboundMessageWorker {
+	worker := OutboundMessageWorker{
 		app:            app,
 		connectorsRepo: connectorsRepo,
-		done:           make(chan bool, 1),
 	}
 
-	return &worker, nil
+	return &worker
 }
 
-func (w *OutboundWorker) Run() {
-	logger.Infow("OutboundWorker started")
-	for {
-		select {
-		case <-w.done:
-			logger.Infow("OutboundWorker stopped")
-			return
-		default:
-			w.workAndSleep()
-		}
-	}
-}
-
-func (w *OutboundWorker) process() {
-
-	for {
-		found, err := w.processOneRecord()
-
-		if err != nil {
-			logger.Error(err)
-			return
-		}
-		if !found {
-			logger.Infow("OutboundWorker found nothing to process")
-			return
-		}
-	}
-}
-
-func (w *OutboundWorker) processOneRecord() (bool, error) {
+func (w *OutboundMessageWorker) Run() (bool, error) {
 	ctx, done := repos.DBTxContext()
 	defer done()
 
@@ -71,7 +41,7 @@ func (w *OutboundWorker) processOneRecord() (bool, error) {
 
 	outboundMessageRepo := repos.NewOutboundMessageRepo(tx)
 
-	message, err := outboundMessageRepo.FindOneForProcessing(models.OutboundMessageStatusNew)
+	message, err := outboundMessageRepo.FindOneForProcessing()
 
 	if err != nil {
 		tx.Rollback(ctx)
@@ -83,7 +53,7 @@ func (w *OutboundWorker) processOneRecord() (bool, error) {
 		return false, nil
 	}
 
-	logger.Infow("OutboundWorker found new message for processing", "message", message)
+	logger.Infow("worker found new message for processing", "worker", w.Name(), "message", message)
 
 	messageOrderRepo := repos.NewMessageOrderRepo(tx)
 
@@ -98,7 +68,7 @@ func (w *OutboundWorker) processOneRecord() (bool, error) {
 		return false, nil
 	}
 
-	connectorMessage := makeConnectorMessage(messageOrder, message)
+	connectorMessage := w.makeConnectorMessage(messageOrder, message)
 	connector := w.connectorsRepo.FindConnector(connectorMessage)
 	resp, err := connector.SendMessage(connectorMessage)
 	name := connector.Name()
@@ -124,18 +94,7 @@ func (w *OutboundWorker) processOneRecord() (bool, error) {
 	return true, nil
 }
 
-func (w *OutboundWorker) workAndSleep() {
-	logger.Infow("OutboundWorker working")
-	w.process()
-	logger.Infow("OutboundWorker sleeping")
-	time.Sleep(w.app.WorkerSleep)
-}
-
-func (w *OutboundWorker) Terminate() {
-	close(w.done)
-}
-
-func makeConnectorMessage(messageOrder *models.MessageOrder, message *models.OutboundMessage) *connectors.MessageRequest {
+func (w *OutboundMessageWorker) makeConnectorMessage(messageOrder *models.MessageOrder, message *models.OutboundMessage) *connectors.MessageRequest {
 	var messageSender string
 	if messageOrder.Sender != nil {
 		messageSender = *messageOrder.Sender
@@ -148,4 +107,12 @@ func makeConnectorMessage(messageOrder *models.MessageOrder, message *models.Out
 		Sender: messageSender,
 		Body:   messageOrder.Body,
 	}
+}
+
+func (w *OutboundMessageWorker) Name() string {
+	return name
+}
+
+func (w *OutboundMessageWorker) SleepTime() time.Duration {
+	return w.app.WorkerSleep
 }
