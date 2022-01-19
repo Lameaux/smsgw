@@ -2,23 +2,13 @@ package repos
 
 import (
 	"fmt"
-	"time"
 
 	"euromoby.com/smsgw/internal/db"
+	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/models"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 )
-
-type MessageOrderQuery struct {
-	Offset int
-	Limit  int
-
-	CreatedAtFrom *time.Time
-	CreatedAtTo   *time.Time
-
-	ClientTransactionID *string
-}
 
 type MessageOrderRepo struct {
 	db db.Conn
@@ -38,7 +28,7 @@ func NewMessageOrderRepo(db db.Conn) *MessageOrderRepo {
 	return &MessageOrderRepo{db}
 }
 
-func (r *MessageOrderRepo) FindByID(merchantID, ID string) (*models.MessageOrder, error) {
+func (r *MessageOrderRepo) FindByMerchantAndID(merchantID, ID string) (*models.MessageOrder, error) {
 	stmt := selectMessageOrdersBase + "where merchant_id = $1 AND id = $2"
 	ctx, cancel := DBQueryContext()
 	defer cancel()
@@ -55,13 +45,13 @@ func (r *MessageOrderRepo) FindByID(merchantID, ID string) (*models.MessageOrder
 	}
 }
 
-func (r *MessageOrderRepo) FindByQuery(merchantID string, q *MessageOrderQuery) ([]*models.MessageOrder, error) {
+func (r *MessageOrderRepo) FindByQuery(q *inputs.MessageOrderSearchParams) ([]*models.MessageOrder, error) {
 	orders := []*models.MessageOrder{}
 
 	stmt := selectMessageOrdersBase
 	args := make([]interface{}, 0)
 
-	args = append(args, merchantID)
+	args = append(args, q.MerchantID)
 	stmt += fmt.Sprintf("where merchant_id = $%d\n", len(args))
 
 	if q.ClientTransactionID != nil {
@@ -69,18 +59,7 @@ func (r *MessageOrderRepo) FindByQuery(merchantID string, q *MessageOrderQuery) 
 		stmt += fmt.Sprintf("and client_transaction_id = $%d\n", len(args))
 	}
 
-	if q.CreatedAtFrom != nil {
-		args = append(args, q.CreatedAtFrom)
-		stmt += fmt.Sprintf("and created_at >= $%d\n", len(args))
-	}
-
-	if q.CreatedAtTo != nil {
-		args = append(args, q.CreatedAtTo)
-		stmt += fmt.Sprintf("and created_at <= $%d\n", len(args))
-	}
-
-	args = append(args, q.Limit, q.Offset)
-	stmt += fmt.Sprintf("order by created_at desc limit $%d offset $%d", len(args)-1, len(args))
+	stmt, args = appendSearchParams(q.SearchParams, stmt, args)
 
 	ctx, cancel := DBQueryContext()
 	defer cancel()

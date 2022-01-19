@@ -57,7 +57,7 @@ func (w *OutboundMessageWorker) Run() (bool, error) {
 
 	messageOrderRepo := repos.NewMessageOrderRepo(tx)
 
-	messageOrder, err := messageOrderRepo.FindByID(message.MerchantID, message.MessageOrderID)
+	messageOrder, err := messageOrderRepo.FindByMerchantAndID(message.MerchantID, message.MessageOrderID)
 	if err != nil {
 		tx.Rollback(ctx)
 		return false, err

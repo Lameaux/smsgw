@@ -7,16 +7,17 @@ import (
 	"testing"
 
 	"euromoby.com/smsgw/internal/config"
+	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/middlewares"
 	"euromoby.com/smsgw/internal/services"
 	"euromoby.com/smsgw/internal/views"
 )
 
 func TestSendHandler_SendMessage(t *testing.T) {
-	service := services.NewOutboundService(TestAppConfig)
+	service := services.NewMessageOrderService(TestAppConfig)
 	h := NewSendHandler(service)
 
-	input := views.SendMessageParams{
+	input := inputs.SendMessageParams{
 		Body: "hello world",
 		To:   []string{"420123456789"},
 	}

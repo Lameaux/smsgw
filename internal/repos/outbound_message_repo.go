@@ -2,23 +2,12 @@ package repos
 
 import (
 	"fmt"
-	"time"
 
 	"euromoby.com/smsgw/internal/db"
+	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/models"
 	"github.com/jackc/pgx/v4"
 )
-
-type OutboundMessageQuery struct {
-	Offset int
-	Limit  int
-
-	CreatedAtFrom *time.Time
-	CreatedAtTo   *time.Time
-
-	MSISDN *string
-	Status *string
-}
 
 const (
 	selectOutboundMessagesBase = `select
@@ -46,7 +35,7 @@ func (r *OutboundMessageRepo) FindByID(merchantID, ID string) (*models.OutboundM
 	row := r.db.QueryRow(ctx, stmt, merchantID, ID)
 
 	var om models.OutboundMessage
-	switch err := scanOutboundMessage(row, &om); err {
+	switch err := r.scanRow(row, &om); err {
 	case pgx.ErrNoRows:
 		return nil, nil
 	case nil:
@@ -71,7 +60,7 @@ func (r *OutboundMessageRepo) FindByMessageOrderID(merchantID, ID string) ([]*mo
 
 	for rows.Next() {
 		var m models.OutboundMessage
-		err = scanOutboundMessage(rows, &m)
+		err = r.scanRow(rows, &m)
 		if err != nil {
 			return nil, err
 		}
@@ -81,37 +70,17 @@ func (r *OutboundMessageRepo) FindByMessageOrderID(merchantID, ID string) ([]*mo
 	return messages, nil
 }
 
-func (r *OutboundMessageRepo) FindByQuery(merchantID string, q *OutboundMessageQuery) ([]*models.OutboundMessage, error) {
+func (r *OutboundMessageRepo) FindByQuery(q *inputs.OutboundMessageSearchParams) ([]*models.OutboundMessage, error) {
 	messages := []*models.OutboundMessage{}
 
 	stmt := selectOutboundMessagesBase
 	args := make([]interface{}, 0)
 
-	args = append(args, merchantID)
+	args = append(args, q.MerchantID)
 	stmt += fmt.Sprintf("where merchant_id = $%d\n", len(args))
 
-	if q.MSISDN != nil {
-		args = append(args, q.MSISDN)
-		stmt += fmt.Sprintf("and msisdn = $%d\n", len(args))
-	}
-
-	if q.Status != nil {
-		args = append(args, q.Status)
-		stmt += fmt.Sprintf("and status = $%d\n", len(args))
-	}
-
-	if q.CreatedAtFrom != nil {
-		args = append(args, q.CreatedAtFrom)
-		stmt += fmt.Sprintf("and created_at >= $%d\n", len(args))
-	}
-
-	if q.CreatedAtTo != nil {
-		args = append(args, q.CreatedAtTo)
-		stmt += fmt.Sprintf("and created_at <= $%d\n", len(args))
-	}
-
-	args = append(args, q.Limit, q.Offset)
-	stmt += fmt.Sprintf("order by created_at desc limit $%d offset $%d", len(args)-1, len(args))
+	stmt, args = appendMessageParams(q.MessageParams, stmt, args)
+	stmt, args = appendSearchParams(q.SearchParams, stmt, args)
 
 	ctx, cancel := DBQueryContext()
 	defer cancel()
@@ -123,7 +92,7 @@ func (r *OutboundMessageRepo) FindByQuery(merchantID string, q *OutboundMessageQ
 
 	for rows.Next() {
 		var om models.OutboundMessage
-		err = scanOutboundMessage(rows, &om)
+		err = r.scanRow(rows, &om)
 		if err != nil {
 			return nil, err
 		}
@@ -145,7 +114,7 @@ func (r *OutboundMessageRepo) FindOneForProcessing() (*models.OutboundMessage, e
 	row := r.db.QueryRow(ctx, stmt, models.OutboundMessageStatusNew)
 
 	var om models.OutboundMessage
-	switch err := scanOutboundMessage(row, &om); err {
+	switch err := r.scanRow(row, &om); err {
 	case pgx.ErrNoRows:
 		return nil, nil
 	case nil:
@@ -155,7 +124,7 @@ func (r *OutboundMessageRepo) FindOneForProcessing() (*models.OutboundMessage, e
 	}
 }
 
-func scanOutboundMessage(row pgx.Row, m *models.OutboundMessage) error {
+func (r *OutboundMessageRepo) scanRow(row pgx.Row, m *models.OutboundMessage) error {
 	return row.Scan(
 		&m.ID,
 		&m.MerchantID,

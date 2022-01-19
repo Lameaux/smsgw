@@ -2,6 +2,7 @@ package services
 
 import (
 	"euromoby.com/smsgw/internal/config"
+	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/models"
 	"euromoby.com/smsgw/internal/repos"
 	"euromoby.com/smsgw/internal/utils"
@@ -30,7 +31,7 @@ func (s *InboundService) FindByShortcodeAndID(shortcode, id string) (*models.Inb
 	defer conn.Release()
 
 	inboundMessageRepo := repos.NewInboundMessageRepo(conn)
-	return inboundMessageRepo.FindByID(shortcode, id)
+	return inboundMessageRepo.FindByShortcodeAndID(shortcode, id)
 }
 
 func (s *InboundService) AckByShortcodeAndID(shortcode, id string) (*models.InboundMessage, error) {
@@ -43,7 +44,7 @@ func (s *InboundService) AckByShortcodeAndID(shortcode, id string) (*models.Inbo
 	}
 
 	inboundMessageRepo := repos.NewInboundMessageRepo(tx)
-	message, err := inboundMessageRepo.FindByID(shortcode, id)
+	message, err := inboundMessageRepo.FindByShortcodeAndID(shortcode, id)
 
 	if err != nil || message == nil {
 		tx.Rollback(ctx)
@@ -75,4 +76,24 @@ func (s *InboundService) AckByShortcodeAndID(shortcode, id string) (*models.Inbo
 	tx.Commit(ctx)
 
 	return message, err
+}
+
+func (s *InboundService) FindByQuery(p *inputs.InboundMessageSearchParams) ([]*models.InboundMessage, error) {
+	ctx, cancel := repos.DBConnContext()
+	defer cancel()
+
+	conn, err := s.app.DBPool.Acquire(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Release()
+
+	inboundMessageRepo := repos.NewInboundMessageRepo(conn)
+
+	messages, err := inboundMessageRepo.FindByQuery(p)
+	if err != nil {
+		return nil, err
+	}
+
+	return messages, nil
 }

@@ -4,32 +4,30 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/middlewares"
 	"euromoby.com/smsgw/internal/models"
 	"euromoby.com/smsgw/internal/services"
 	"euromoby.com/smsgw/internal/utils"
-	"euromoby.com/smsgw/internal/views"
 	"github.com/gin-gonic/gin"
 )
 
 type SendHandler struct {
-	service *services.OutboundService
+	service *services.MessageOrderService
 }
 
-func NewSendHandler(service *services.OutboundService) *SendHandler {
+func NewSendHandler(service *services.MessageOrderService) *SendHandler {
 	return &SendHandler{service}
 }
 
 func (h *SendHandler) SendMessage(c *gin.Context) {
-	merchantID := c.GetString(middlewares.MerchantIDKey)
-
-	params, err := h.parseRequest(c.Request)
+	p, err := h.parseRequest(c)
 	if err != nil {
 		utils.ErrorJSON(c, http.StatusBadRequest, err)
 		return
 	}
 
-	result, err := h.service.SendMessage(merchantID, params)
+	result, err := h.service.SendMessage(p)
 	if err != nil {
 		switch err {
 		case models.ErrDuplicateClientTransactionID:
@@ -44,25 +42,27 @@ func (h *SendHandler) SendMessage(c *gin.Context) {
 	c.JSON(http.StatusCreated, result)
 }
 
-func (h *SendHandler) parseRequest(r *http.Request) (*views.SendMessageParams, error) {
-	var mreq views.SendMessageParams
-	dec := json.NewDecoder(r.Body)
+func (h *SendHandler) parseRequest(c *gin.Context) (*inputs.SendMessageParams, error) {
+	var p inputs.SendMessageParams
+	dec := json.NewDecoder(c.Request.Body)
 	dec.DisallowUnknownFields()
 
-	err := dec.Decode(&mreq)
+	err := dec.Decode(&p)
 	if err != nil {
 		return nil, err
 	}
 
-	recipients, err := h.normalizeRecipients(mreq.To)
+	p.MerchantID = c.GetString(middlewares.MerchantIDKey)
+
+	recipients, err := h.normalizeRecipients(p.To)
 	if err != nil {
 		return nil, err
 	}
-	mreq.To = recipients
+	p.To = recipients
 
 	// TODO: validate more inputs
 
-	return &mreq, nil
+	return &p, nil
 }
 
 func (h *SendHandler) normalizeRecipients(input []string) ([]string, error) {

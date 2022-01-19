@@ -3,87 +3,46 @@ package handlers
 import (
 	"net/http"
 
-	"euromoby.com/smsgw/internal/config"
+	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/middlewares"
-	"euromoby.com/smsgw/internal/repos"
+	"euromoby.com/smsgw/internal/services"
 	"euromoby.com/smsgw/internal/utils"
-	"euromoby.com/smsgw/internal/views"
 	"github.com/gin-gonic/gin"
 )
 
 type OutboundHandler struct {
-	app *config.AppConfig
+	service *services.OutboundService
 }
 
-func NewOutboundHandler(app *config.AppConfig) *OutboundHandler {
-	return &OutboundHandler{app}
+func NewOutboundHandler(service *services.OutboundService) *OutboundHandler {
+	return &OutboundHandler{service}
 }
 
 func (h *OutboundHandler) Get(c *gin.Context) {
-	merchantID := c.GetString(middlewares.MerchantIDKey)
-	ID := c.Param("id")
+	p := h.params(c)
 
-	ctx, cancel := repos.DBConnContext()
-	defer cancel()
-
-	conn, err := h.app.DBPool.Acquire(ctx)
-	if err != nil {
-		utils.ErrorJSON(c, http.StatusInternalServerError, err)
-		return
-	}
-	defer conn.Release()
-
-	outboundMessageRepo := repos.NewOutboundMessageRepo(conn)
-
-	message, err := outboundMessageRepo.FindByID(merchantID, ID)
+	messageDetail, err := h.service.FindByMerchantAndID(p.MerchantID, p.ID)
 	if err != nil {
 		utils.ErrorJSON(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	if message == nil {
+	if messageDetail == nil {
 		utils.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
 		return
 	}
 
-	messageOrderRepo := repos.NewMessageOrderRepo(conn)
-
-	messageOrder, err := messageOrderRepo.FindByID(merchantID, message.MessageOrderID)
-	if err != nil {
-		utils.ErrorJSON(c, http.StatusInternalServerError, err)
-		return
-	}
-
-	if messageOrder == nil {
-		utils.ErrorJSON(c, http.StatusNotFound, ErrMessageOrderNotFound)
-		return
-	}
-
-	c.JSON(http.StatusOK, views.NewOutboundMessageDetail(message, messageOrder))
+	c.JSON(http.StatusOK, messageDetail)
 }
 
 func (h *OutboundHandler) Search(c *gin.Context) {
-	merchantID := c.GetString(middlewares.MerchantIDKey)
-
-	q, err := makeOutboundMessageQuery(c)
+	p, err := h.searchParams(c)
 	if err != nil {
 		utils.ErrorJSON(c, http.StatusBadRequest, err)
 		return
 	}
 
-	ctx, cancel := repos.DBConnContext()
-	defer cancel()
-
-	conn, err := h.app.DBPool.Acquire(ctx)
-	if err != nil {
-		utils.ErrorJSON(c, http.StatusInternalServerError, err)
-		return
-	}
-	defer conn.Release()
-
-	outboundMessageRepo := repos.NewOutboundMessageRepo(conn)
-
-	messages, err := outboundMessageRepo.FindByQuery(merchantID, q)
+	messages, err := h.service.FindByQuery(p)
 	if err != nil {
 		utils.ErrorJSON(c, http.StatusInternalServerError, err)
 		return
@@ -92,48 +51,29 @@ func (h *OutboundHandler) Search(c *gin.Context) {
 	c.JSON(http.StatusOK, messages)
 }
 
-func makeOutboundMessageQuery(c *gin.Context) (*repos.OutboundMessageQuery, error) {
-	offset, err := queryParamIntDefault(c, "offset", 0)
+func (h *OutboundHandler) params(c *gin.Context) *inputs.OutboundMessageParams {
+	return &inputs.OutboundMessageParams{
+		MerchantID: c.GetString(middlewares.MerchantIDKey),
+		ID:         c.Param("id"),
+	}
+}
+
+func (h *OutboundHandler) searchParams(c *gin.Context) (*inputs.OutboundMessageSearchParams, error) {
+	sp, err := commonSearchParams(c)
 	if err != nil {
 		return nil, err
 	}
 
-	limit, err := queryParamIntDefault(c, "limit", 10)
+	mp, err := messageSearchParams(c)
 	if err != nil {
 		return nil, err
 	}
 
-	createdAtFrom, err := queryParamTime(c, "created_at_from")
-	if err != nil {
-		return nil, err
+	p := &inputs.OutboundMessageSearchParams{
+		MerchantID:    c.GetString(middlewares.MerchantIDKey),
+		SearchParams:  sp,
+		MessageParams: mp,
 	}
 
-	createdAtTo, err := queryParamTime(c, "created_at_to")
-	if err != nil {
-		return nil, err
-	}
-
-	q := repos.OutboundMessageQuery{
-		Offset:        offset,
-		Limit:         limit,
-		CreatedAtFrom: createdAtFrom,
-		CreatedAtTo:   createdAtTo,
-	}
-
-	msisdn := c.Query("msisdn")
-	if msisdn != "" {
-		msisdn, err := utils.NormalizeMSISDN(msisdn)
-		if err != nil {
-			return nil, err
-		}
-
-		q.MSISDN = &msisdn
-	}
-
-	status := c.Query("status")
-	if status != "" {
-		q.Status = &status
-	}
-
-	return &q, nil
+	return p, nil
 }

@@ -18,10 +18,12 @@ func Gin(app *config.AppConfig) *gin.Engine {
 	r.GET("/", i.Index)
 	r.GET("/health", i.Index)
 
+	messageOrderService := services.NewMessageOrderService(app)
+	send := handlers.NewSendHandler(messageOrderService)
+	status := handlers.NewStatusHandler(messageOrderService)
+
 	outboundService := services.NewOutboundService(app)
-	send := handlers.NewSendHandler(outboundService)
-	status := handlers.NewStatusHandler(app)
-	outbound := handlers.NewOutboundHandler(app)
+	outbound := handlers.NewOutboundHandler(outboundService)
 
 	inboundService := services.NewInboundService(app)
 	inbound := handlers.NewInboundHandler(inboundService)

@@ -1,7 +1,10 @@
 package repos
 
 import (
+	"fmt"
+
 	"euromoby.com/smsgw/internal/db"
+	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/models"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
@@ -27,7 +30,7 @@ func NewInboundMessageRepo(db db.Conn) *InboundMessageRepo {
 	return &InboundMessageRepo{db}
 }
 
-func (r *InboundMessageRepo) FindByID(shortcode, ID string) (*models.InboundMessage, error) {
+func (r *InboundMessageRepo) FindByShortcodeAndID(shortcode, ID string) (*models.InboundMessage, error) {
 	ctx, cancel := DBQueryContext()
 	defer cancel()
 
@@ -37,7 +40,7 @@ func (r *InboundMessageRepo) FindByID(shortcode, ID string) (*models.InboundMess
 
 	var im models.InboundMessage
 
-	switch err := scanInboundMessage(row, &im); err {
+	switch err := r.scanRow(row, &im); err {
 	case pgx.ErrNoRows:
 		return nil, nil
 	case nil:
@@ -47,33 +50,39 @@ func (r *InboundMessageRepo) FindByID(shortcode, ID string) (*models.InboundMess
 	}
 }
 
-func (r *InboundMessageRepo) FindByShortCode(shortcode string) ([]*models.InboundMessage, error) {
+func (r *InboundMessageRepo) FindByQuery(q *inputs.InboundMessageSearchParams) ([]*models.InboundMessage, error) {
+	messages := []*models.InboundMessage{}
+
+	stmt := selectInboundMessagesBase
+	args := make([]interface{}, 0)
+
+	args = append(args, q.Shortcode)
+	stmt += fmt.Sprintf("where shortcode = $%d\n", len(args))
+
+	stmt, args = appendMessageParams(q.MessageParams, stmt, args)
+	stmt, args = appendSearchParams(q.SearchParams, stmt, args)
+
 	ctx, cancel := DBQueryContext()
 	defer cancel()
-
-	var messages []*models.InboundMessage
-
-	stmt := selectInboundMessagesBase + "where shortcode = $1"
-
-	rows, err := r.db.Query(ctx, stmt, shortcode)
+	rows, err := r.db.Query(ctx, stmt, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var m models.InboundMessage
-		err = scanInboundMessage(rows, &m)
+		var om models.InboundMessage
+		err = r.scanRow(rows, &om)
 		if err != nil {
 			return nil, err
 		}
-		messages = append(messages, &m)
+		messages = append(messages, &om)
 	}
 
 	return messages, nil
 }
 
-func scanInboundMessage(row pgx.Row, m *models.InboundMessage) error {
+func (r *InboundMessageRepo) scanRow(row pgx.Row, m *models.InboundMessage) error {
 	err := row.Scan(
 		&m.ID,
 		&m.Shortcode,

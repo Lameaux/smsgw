@@ -22,10 +22,10 @@ func TestMessageOrderRepo_Save(t *testing.T) {
 	assert.NotNil(t, mo.ClientTransactionID, "ClientTransactionID ID is not set")
 }
 
-func TestMessageOrderRepo_FindByID(t *testing.T) {
+func TestMessageOrderRepo_FindByMerchantAndID(t *testing.T) {
 	r := NewMessageOrderRepo(TestAppConfig.DBPool)
 
-	found, err := r.FindByID(utils.NewUUID(), utils.NewUUID())
+	found, err := r.FindByMerchantAndID(utils.NewUUID(), utils.NewUUID())
 	assert.Nil(t, err, "unexpected error")
 	assert.Nil(t, found, "wrong MessageOrder found")
 
@@ -34,7 +34,7 @@ func TestMessageOrderRepo_FindByID(t *testing.T) {
 	err = r.Save(mo)
 	require.NoError(t, err, "Saving MessageOrder failed")
 
-	found, err = r.FindByID(merchantID, mo.ID)
+	found, err = r.FindByMerchantAndID(merchantID, mo.ID)
 	assert.Nil(t, err, "unexpected error")
 	assert.NotNil(t, found, "MessageOrder not found")
 

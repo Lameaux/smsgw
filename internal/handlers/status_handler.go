@@ -3,82 +3,46 @@ package handlers
 import (
 	"net/http"
 
-	"euromoby.com/smsgw/internal/config"
+	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/middlewares"
-	"euromoby.com/smsgw/internal/repos"
+	"euromoby.com/smsgw/internal/services"
 	"euromoby.com/smsgw/internal/utils"
-	"euromoby.com/smsgw/internal/views"
 	"github.com/gin-gonic/gin"
 )
 
 type StatusHandler struct {
-	app *config.AppConfig
+	service *services.MessageOrderService
 }
 
-func NewStatusHandler(app *config.AppConfig) *StatusHandler {
-	return &StatusHandler{app}
+func NewStatusHandler(service *services.MessageOrderService) *StatusHandler {
+	return &StatusHandler{service}
 }
 
-func (h StatusHandler) Get(c *gin.Context) {
-	merchantID := c.GetString(middlewares.MerchantIDKey)
-	ID := c.Param("id")
+func (h *StatusHandler) Get(c *gin.Context) {
+	p := h.params(c)
 
-	ctx, cancel := repos.DBConnContext()
-	defer cancel()
-
-	conn, err := h.app.DBPool.Acquire(ctx)
-	if err != nil {
-		utils.ErrorJSON(c, http.StatusInternalServerError, err)
-		return
-	}
-	defer conn.Release()
-
-	messageOrderRepo := repos.NewMessageOrderRepo(conn)
-
-	messageOrder, err := messageOrderRepo.FindByID(merchantID, ID)
+	orderStatus, err := h.service.FindByMerchantAndID(p.MerchantID, p.ID)
 	if err != nil {
 		utils.ErrorJSON(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	if messageOrder == nil {
+	if orderStatus == nil {
 		utils.ErrorJSON(c, http.StatusNotFound, ErrMessageOrderNotFound)
 		return
 	}
 
-	outboundMessageRepo := repos.NewOutboundMessageRepo(conn)
-
-	messages, err := outboundMessageRepo.FindByMessageOrderID(merchantID, messageOrder.ID)
-	if err != nil {
-		utils.ErrorJSON(c, http.StatusInternalServerError, err)
-		return
-	}
-
-	c.JSON(http.StatusOK, views.NewMessageOrderStatus(messageOrder, messages))
+	c.JSON(http.StatusOK, orderStatus)
 }
 
-func (h StatusHandler) Search(c *gin.Context) {
-	merchantID := c.GetString(middlewares.MerchantIDKey)
-
-	q, err := makeMessageOrderQuery(c)
+func (h *StatusHandler) Search(c *gin.Context) {
+	p, err := h.searchParams(c)
 	if err != nil {
 		utils.ErrorJSON(c, http.StatusBadRequest, err)
 		return
 	}
 
-	ctx, cancel := repos.DBConnContext()
-	defer cancel()
-
-	conn, err := h.app.DBPool.Acquire(ctx)
-	if err != nil {
-		utils.ErrorJSON(c, http.StatusInternalServerError, err)
-		return
-	}
-	defer conn.Release()
-
-	messageOrderRepo := repos.NewMessageOrderRepo(conn)
-
-	messageOrders, err := messageOrderRepo.FindByQuery(merchantID, q)
+	messageOrders, err := h.service.FindByQuery(p)
 	if err != nil {
 		utils.ErrorJSON(c, http.StatusInternalServerError, err)
 		return
@@ -87,38 +51,28 @@ func (h StatusHandler) Search(c *gin.Context) {
 	c.JSON(http.StatusOK, messageOrders)
 }
 
-func makeMessageOrderQuery(c *gin.Context) (*repos.MessageOrderQuery, error) {
-	offset, err := queryParamIntDefault(c, "offset", 0)
+func (h *StatusHandler) params(c *gin.Context) *inputs.MessageOrderParams {
+	return &inputs.MessageOrderParams{
+		MerchantID: c.GetString(middlewares.MerchantIDKey),
+		ID:         c.Param("id"),
+	}
+}
+
+func (h *StatusHandler) searchParams(c *gin.Context) (*inputs.MessageOrderSearchParams, error) {
+	sp, err := commonSearchParams(c)
 	if err != nil {
 		return nil, err
 	}
 
-	limit, err := queryParamIntDefault(c, "limit", 10)
-	if err != nil {
-		return nil, err
-	}
-
-	createdAtFrom, err := queryParamTime(c, "created_at_from")
-	if err != nil {
-		return nil, err
-	}
-
-	createdAtTo, err := queryParamTime(c, "created_at_to")
-	if err != nil {
-		return nil, err
-	}
-
-	q := repos.MessageOrderQuery{
-		Offset:        offset,
-		Limit:         limit,
-		CreatedAtFrom: createdAtFrom,
-		CreatedAtTo:   createdAtTo,
+	p := &inputs.MessageOrderSearchParams{
+		MerchantID:   c.GetString(middlewares.MerchantIDKey),
+		SearchParams: sp,
 	}
 
 	clientTransactionID := c.Query("client_transaction_id")
 	if clientTransactionID != "" {
-		q.ClientTransactionID = &clientTransactionID
+		p.ClientTransactionID = &clientTransactionID
 	}
 
-	return &q, nil
+	return p, nil
 }

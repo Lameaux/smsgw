@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/middlewares"
 	"euromoby.com/smsgw/internal/models"
 	"euromoby.com/smsgw/internal/services"
@@ -14,22 +15,8 @@ type InboundHandler struct {
 	service *services.InboundService
 }
 
-type InboundParams struct {
-	MerchantID string
-	Shortcode  string
-	ID         string
-}
-
 func NewInboundHandler(service *services.InboundService) *InboundHandler {
 	return &InboundHandler{service}
-}
-
-func (h *InboundHandler) params(c *gin.Context) *InboundParams {
-	return &InboundParams{
-		MerchantID: c.GetString(middlewares.MerchantIDKey),
-		Shortcode:  c.Param("shortcode"),
-		ID:         c.Param("id"),
-	}
 }
 
 func (h *InboundHandler) Get(c *gin.Context) {
@@ -52,7 +39,7 @@ func (h *InboundHandler) Get(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, &message)
+	c.JSON(http.StatusOK, message)
 }
 
 func (h *InboundHandler) Ack(c *gin.Context) {
@@ -80,9 +67,56 @@ func (h *InboundHandler) Ack(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, &message)
+	c.JSON(http.StatusOK, message)
 }
 
 func (h *InboundHandler) Search(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{})
+	p, err := h.searchParams(c)
+	if err != nil {
+		utils.ErrorJSON(c, http.StatusBadRequest, err)
+		return
+	}
+
+	err = h.service.ValidateShortcode(p.MerchantID, p.Shortcode)
+	if err != nil {
+		utils.ErrorJSON(c, http.StatusForbidden, err)
+		return
+	}
+
+	messages, err := h.service.FindByQuery(p)
+	if err != nil {
+		utils.ErrorJSON(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, messages)
+}
+
+func (h *InboundHandler) params(c *gin.Context) *inputs.InboundMessageParams {
+	return &inputs.InboundMessageParams{
+		MerchantID: c.GetString(middlewares.MerchantIDKey),
+		Shortcode:  c.Param("shortcode"),
+		ID:         c.Param("id"),
+	}
+}
+
+func (h *InboundHandler) searchParams(c *gin.Context) (*inputs.InboundMessageSearchParams, error) {
+	sp, err := commonSearchParams(c)
+	if err != nil {
+		return nil, err
+	}
+
+	mp, err := messageSearchParams(c)
+	if err != nil {
+		return nil, err
+	}
+
+	p := &inputs.InboundMessageSearchParams{
+		MerchantID:    c.GetString(middlewares.MerchantIDKey),
+		Shortcode:     c.Param("shortcode"),
+		SearchParams:  sp,
+		MessageParams: mp,
+	}
+
+	return p, nil
 }
