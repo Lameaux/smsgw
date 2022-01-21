@@ -1,6 +1,7 @@
 package workers
 
 import (
+	"fmt"
 	"time"
 
 	"euromoby.com/smsgw/internal/logger"
@@ -46,6 +47,7 @@ func (r *Runner) Stop() {
 }
 
 func (r *Runner) executeTask() {
+	defer r.recoverPanic()
 	for {
 		hasNext, err := r.w.Run()
 
@@ -57,5 +59,15 @@ func (r *Runner) executeTask() {
 			logger.Infow("worker found nothing to process", "worker", r.w.Name())
 			return
 		}
+	}
+}
+
+func (r *Runner) recoverPanic() {
+	if e := recover(); e != nil {
+		err, ok := e.(error)
+		if !ok {
+			err = fmt.Errorf("%v", e)
+		}
+		logger.Errorw("panic", "error", err, "worker", r.w.Name())
 	}
 }

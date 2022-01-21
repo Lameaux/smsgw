@@ -62,18 +62,18 @@ func commonSearchParams(c *gin.Context) (*inputs.SearchParams, error) {
 		return nil, err
 	}
 
-	p := &inputs.SearchParams{
+	p := inputs.SearchParams{
 		Offset:        offset,
 		Limit:         limit,
 		CreatedAtFrom: createdAtFrom,
 		CreatedAtTo:   createdAtTo,
 	}
 
-	return p, nil
+	return &p, nil
 }
 
 func messageSearchParams(c *gin.Context) (*inputs.MessageParams, error) {
-	p := &inputs.MessageParams{}
+	p := inputs.MessageParams{}
 
 	msisdn := c.Query("msisdn")
 	if msisdn != "" {
@@ -90,5 +90,5 @@ func messageSearchParams(c *gin.Context) (*inputs.MessageParams, error) {
 		p.Status = &status
 	}
 
-	return p, nil
+	return &p, nil
 }

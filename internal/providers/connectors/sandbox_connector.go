@@ -50,7 +50,7 @@ func (c *SandboxConnector) Accept(message *MessageRequest) bool {
 }
 
 func (c *SandboxConnector) SendMessage(message *MessageRequest) (*MessageResponse, error) {
-	reqBody := &SandboxConnectorRequest{
+	reqBody := SandboxConnectorRequest{
 		MSISDN: message.MSISDN,
 		Body:   message.Body,
 		Sender: message.Sender,
@@ -73,24 +73,24 @@ func (c *SandboxConnector) SendMessage(message *MessageRequest) (*MessageRespons
 	}
 
 	respBody := string(respBodyBytes)
-	r := &MessageResponse{
+	r := MessageResponse{
 		Body: &respBody,
 	}
 
 	if httpResp.StatusCode != 201 {
-		return r, models.ErrSendFailed
+		return &r, models.ErrSendFailed
 	}
 
 	var resp SandboxConnectorResponse
 	err = json.Unmarshal(respBodyBytes, &resp)
 	if err != nil {
-		return r, err
+		return &r, err
 	}
 
 	r.MessageID = resp.MessageID
 
 	logger.Infow("message sent via SandboxConnector", "message", message)
-	return r, nil
+	return &r, nil
 }
 
 func (c *SandboxConnector) SendStatus(status *StatusRequest) (*StatusResponse, error) {

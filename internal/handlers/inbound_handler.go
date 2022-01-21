@@ -111,12 +111,12 @@ func (h *InboundHandler) searchParams(c *gin.Context) (*inputs.InboundMessageSea
 		return nil, err
 	}
 
-	p := &inputs.InboundMessageSearchParams{
+	p := inputs.InboundMessageSearchParams{
 		MerchantID:    c.GetString(middlewares.MerchantIDKey),
 		Shortcode:     c.Param("shortcode"),
 		SearchParams:  sp,
 		MessageParams: mp,
 	}
 
-	return p, nil
+	return &p, nil
 }

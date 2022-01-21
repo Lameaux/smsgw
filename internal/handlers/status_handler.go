@@ -64,7 +64,7 @@ func (h *StatusHandler) searchParams(c *gin.Context) (*inputs.MessageOrderSearch
 		return nil, err
 	}
 
-	p := &inputs.MessageOrderSearchParams{
+	p := inputs.MessageOrderSearchParams{
 		MerchantID:   c.GetString(middlewares.MerchantIDKey),
 		SearchParams: sp,
 	}
@@ -74,5 +74,5 @@ func (h *StatusHandler) searchParams(c *gin.Context) (*inputs.MessageOrderSearch
 		p.ClientTransactionID = &clientTransactionID
 	}
 
-	return p, nil
+	return &p, nil
 }

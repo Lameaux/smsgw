@@ -69,11 +69,11 @@ func (h *OutboundHandler) searchParams(c *gin.Context) (*inputs.OutboundMessageS
 		return nil, err
 	}
 
-	p := &inputs.OutboundMessageSearchParams{
+	p := inputs.OutboundMessageSearchParams{
 		MerchantID:    c.GetString(middlewares.MerchantIDKey),
 		SearchParams:  sp,
 		MessageParams: mp,
 	}
 
-	return p, nil
+	return &p, nil
 }
