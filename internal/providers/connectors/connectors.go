@@ -2,32 +2,34 @@ package connectors
 
 import "euromoby.com/smsgw/internal/logger"
 
-type MessageRequest struct {
-	MSISDN string
-	Sender string
-	Body   string
+type SendMessageRequest struct {
+	MSISDN              string
+	Sender              string
+	Body                string
+	ClientTransactionID string
 }
 
-type MessageResponse struct {
+type SendMessageResponse struct {
 	MessageID *string
 	Body      *string
 }
 
-type StatusRequest struct {
-	MessageID string
-	MSISDN    string
-	Status    string
+type SendStatusRequest struct {
+	MessageID           string
+	MSISDN              string
+	Status              string
+	ClientTransactionID string
 }
 
-type StatusResponse struct {
+type SendStatusResponse struct {
 	Body *string
 }
 
 type Connector interface {
 	Name() string
-	Accept(message *MessageRequest) bool
-	SendMessage(message *MessageRequest) (*MessageResponse, error)
-	SendStatus(message *StatusRequest) (*StatusResponse, error)
+	Accept(message *SendMessageRequest) bool
+	SendMessage(message *SendMessageRequest) (*SendMessageResponse, error)
+	SendStatus(message *SendStatusRequest) (*SendStatusResponse, error)
 }
 
 type ConnectorRepository struct {
@@ -48,13 +50,13 @@ func (r *ConnectorRepository) FindConnectorByName(name string) (Connector, bool)
 	return connector, found
 }
 
-func (r *ConnectorRepository) FindConnector(message *MessageRequest) Connector {
+func (r *ConnectorRepository) FindConnector(message *SendMessageRequest) Connector {
 	for _, connector := range r.connectors {
 		if connector.Accept(message) {
 			return connector
 		}
 	}
 
-	logger.Infow("no connector found for the message", "message", message)
+	logger.Infow("no connector found for the message", "sms", message)
 	return &DeadLetterConnector{}
 }

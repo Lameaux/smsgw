@@ -12,6 +12,7 @@ type Worker interface {
 	Name() string
 	Run() (bool, error)
 	SleepTime() time.Duration
+	MaxAttempts() int
 }
 
 type Runner struct {
@@ -52,7 +53,10 @@ func (r *Runner) executeTask() {
 	for {
 		hasNext, err := r.w.Run()
 		if err != nil {
-			logger.Error(err)
+			logger.Errorw("worker execution failed",
+				"error", err,
+				"worker", r.w.Name(),
+			)
 			return
 		}
 		if !hasNext {
@@ -68,7 +72,7 @@ func (r *Runner) recoverPanic() {
 		if !ok {
 			err = fmt.Errorf("%v", e)
 		}
-		logger.Errorw("panic",
+		logger.Errorw("Oops! panic!",
 			"error", err,
 			"worker", r.w.Name(),
 			"stacktrace", string(debug.Stack()),

@@ -18,14 +18,14 @@ func (c *DeadLetterConnector) Name() string {
 	return c.name
 }
 
-func (c *DeadLetterConnector) Accept(message *MessageRequest) bool {
+func (c *DeadLetterConnector) Accept(message *SendMessageRequest) bool {
 	return true
 }
 
-func (c *DeadLetterConnector) SendMessage(message *MessageRequest) (*MessageResponse, error) {
+func (c *DeadLetterConnector) SendMessage(message *SendMessageRequest) (*SendMessageResponse, error) {
 	return nil, models.ErrDeadLetter
 }
 
-func (c *DeadLetterConnector) SendStatus(status *StatusRequest) (*StatusResponse, error) {
+func (c *DeadLetterConnector) SendStatus(status *SendStatusRequest) (*SendStatusResponse, error) {
 	return nil, models.ErrDeadLetter
 }

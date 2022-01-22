@@ -13,8 +13,6 @@ import (
 
 const (
 	defaultSender = "SMSGW"
-	name          = "OutboundMessageWorker"
-	maxAttempts   = 5
 )
 
 type OutboundMessageWorker struct {
@@ -23,12 +21,10 @@ type OutboundMessageWorker struct {
 }
 
 func NewOutboundMessageWorker(app *config.AppConfig, connectorsRepo *connectors.ConnectorRepository) *OutboundMessageWorker {
-	worker := OutboundMessageWorker{
+	return &OutboundMessageWorker{
 		app:            app,
 		connectorsRepo: connectorsRepo,
 	}
-
-	return &worker
 }
 
 func (w *OutboundMessageWorker) Run() (bool, error) {
@@ -52,30 +48,20 @@ func (w *OutboundMessageWorker) Run() (bool, error) {
 		return false, nil
 	}
 
-	logger.Infow("worker found new message for processing", "worker", w.Name(), "message", message)
+	logger.Infow("worker found new message for processing", "worker", w.Name(), "sms", message)
 
 	messageOrderRepo := repos.NewMessageOrderRepo(tx)
 
-	messageOrder, err := messageOrderRepo.FindByMerchantAndID(message.MerchantID, message.MessageOrderID)
+	messageOrder, err := messageOrderRepo.FindByID(message.MessageOrderID)
 	if err != nil {
 		return false, err
 	}
 
 	if messageOrder == nil {
-		return false, nil
-	}
-
-	connectorMessage := w.makeConnectorMessage(messageOrder, message)
-	connector := w.connectorsRepo.FindConnector(connectorMessage)
-	resp, err := connector.SendMessage(connectorMessage)
-
-	name := connector.Name()
-	message.ProviderID = &name
-
-	if err != nil {
-		w.handleFailure(message, resp, err)
+		logger.Errorw("message order is missing", "worker", w.Name(), "sms", message)
+		message.Status = models.OutboundMessageStatusFailed
 	} else {
-		w.handleSuccess(message, resp)
+		w.sendToProvider(messageOrder, message)
 	}
 
 	if err = outboundMessageRepo.Update(message); err != nil {
@@ -89,7 +75,22 @@ func (w *OutboundMessageWorker) Run() (bool, error) {
 	return true, nil
 }
 
-func (w *OutboundMessageWorker) handleFailure(message *models.OutboundMessage, resp *connectors.MessageResponse, err error) {
+func (w *OutboundMessageWorker) sendToProvider(messageOrder *models.MessageOrder, message *models.OutboundMessage) {
+	connectorMessage := w.makeConnectorMessage(messageOrder, message)
+	connector := w.connectorsRepo.FindConnector(connectorMessage)
+	resp, err := connector.SendMessage(connectorMessage)
+
+	name := connector.Name()
+	message.ProviderID = &name
+
+	if err != nil {
+		w.handleFailure(message, resp, err)
+	} else {
+		w.handleSuccess(message, resp)
+	}
+}
+
+func (w *OutboundMessageWorker) handleFailure(message *models.OutboundMessage, resp *connectors.SendMessageResponse, err error) {
 	switch err {
 	case models.ErrSendFailed, models.ErrInvalidJSON:
 		message.ProviderResponse = resp.Body
@@ -98,9 +99,13 @@ func (w *OutboundMessageWorker) handleFailure(message *models.OutboundMessage, r
 		message.ProviderResponse = &errorText
 	}
 
-	if message.AttemptCounter >= maxAttempts {
+	w.tryReschedule(message)
+}
+
+func (w *OutboundMessageWorker) tryReschedule(message *models.OutboundMessage) {
+	if message.AttemptCounter >= w.MaxAttempts() {
 		message.Status = models.OutboundMessageStatusFailed
-		logger.Errorw("sending failed", "worker", w.Name(), "message", message)
+		logger.Errorw("sending failed", "worker", w.Name(), "sms", message)
 		return
 	}
 
@@ -108,21 +113,21 @@ func (w *OutboundMessageWorker) handleFailure(message *models.OutboundMessage, r
 	message.AttemptCounter++
 	logger.Infow("sending attempt failed, will try again later",
 		"worker", w.Name(),
-		"message", message,
+		"sms", message,
 		"next_attempt_at", message.NextAttemptAt,
 		"attempt_counter", message.AttemptCounter,
 	)
 }
 
-func (w *OutboundMessageWorker) handleSuccess(message *models.OutboundMessage, resp *connectors.MessageResponse) {
+func (w *OutboundMessageWorker) handleSuccess(message *models.OutboundMessage, resp *connectors.SendMessageResponse) {
 	message.Status = models.OutboundMessageStatusSent
 	message.ProviderResponse = resp.Body
 	message.ProviderMessageID = resp.MessageID
 
-	logger.Infow("successfully sent", "worker", w.Name(), "message", message)
+	logger.Infow("successfully sent", "worker", w.Name(), "sms", message)
 }
 
-func (w *OutboundMessageWorker) makeConnectorMessage(messageOrder *models.MessageOrder, message *models.OutboundMessage) *connectors.MessageRequest {
+func (w *OutboundMessageWorker) makeConnectorMessage(messageOrder *models.MessageOrder, message *models.OutboundMessage) *connectors.SendMessageRequest {
 	var messageSender string
 	if messageOrder.Sender != nil {
 		messageSender = *messageOrder.Sender
@@ -130,15 +135,20 @@ func (w *OutboundMessageWorker) makeConnectorMessage(messageOrder *models.Messag
 		messageSender = defaultSender
 	}
 
-	return &connectors.MessageRequest{
-		MSISDN: message.MSISDN,
-		Sender: messageSender,
-		Body:   messageOrder.Body,
+	return &connectors.SendMessageRequest{
+		MSISDN:              message.MSISDN,
+		Sender:              messageSender,
+		Body:                messageOrder.Body,
+		ClientTransactionID: message.ID,
 	}
 }
 
 func (w *OutboundMessageWorker) Name() string {
-	return name
+	return "OutboundMessageWorker"
+}
+
+func (w *OutboundMessageWorker) MaxAttempts() int {
+	return 5
 }
 
 func (w *OutboundMessageWorker) SleepTime() time.Duration {

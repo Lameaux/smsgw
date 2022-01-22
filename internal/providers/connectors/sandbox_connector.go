@@ -20,13 +20,14 @@ type SandboxConnector struct {
 	countryCodes []string
 }
 
-type SandboxConnectorRequest struct {
-	Sender string `json:"sender"`
-	MSISDN string `json:"msisdn"`
-	Body   string `json:"body"`
+type SandboxMessageRequest struct {
+	Sender              string `json:"sender"`
+	MSISDN              string `json:"msisdn"`
+	Body                string `json:"body"`
+	ClientTransactionID string `json:"client_transaction_id"`
 }
 
-type SandboxConnectorResponse struct {
+type SandboxMessageResponse struct {
 	MessageID *string `json:"message_id"`
 }
 
@@ -41,7 +42,7 @@ func (c *SandboxConnector) Name() string {
 	return c.name
 }
 
-func (c *SandboxConnector) Accept(message *MessageRequest) bool {
+func (c *SandboxConnector) Accept(message *SendMessageRequest) bool {
 	for _, countryCode := range c.countryCodes {
 		if strings.HasPrefix(message.MSISDN, countryCode) {
 			return true
@@ -50,17 +51,20 @@ func (c *SandboxConnector) Accept(message *MessageRequest) bool {
 	return false
 }
 
-func (c *SandboxConnector) SendMessage(message *MessageRequest) (*MessageResponse, error) {
-	reqBody := SandboxConnectorRequest{
-		MSISDN: message.MSISDN,
-		Body:   message.Body,
-		Sender: message.Sender,
+func (c *SandboxConnector) SendMessage(message *SendMessageRequest) (*SendMessageResponse, error) {
+	reqBody := SandboxMessageRequest{
+		MSISDN:              message.MSISDN,
+		Body:                message.Body,
+		Sender:              message.Sender,
+		ClientTransactionID: message.ClientTransactionID,
 	}
 
 	jsonBody, err := json.Marshal(reqBody)
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO: setup timeouts
 
 	httpResp, err := http.Post(apiBaseURL+"/message", "application/json", bytes.NewBuffer(jsonBody))
 	if err != nil {
@@ -74,7 +78,7 @@ func (c *SandboxConnector) SendMessage(message *MessageRequest) (*MessageRespons
 	}
 
 	respBody := string(respBodyBytes)
-	r := MessageResponse{
+	r := SendMessageResponse{
 		Body: &respBody,
 	}
 
@@ -82,7 +86,7 @@ func (c *SandboxConnector) SendMessage(message *MessageRequest) (*MessageRespons
 		return &r, models.ErrSendFailed
 	}
 
-	var resp SandboxConnectorResponse
+	var resp SandboxMessageResponse
 	err = json.Unmarshal(respBodyBytes, &resp)
 	if err != nil {
 		return &r, models.ErrInvalidJSON
@@ -90,10 +94,10 @@ func (c *SandboxConnector) SendMessage(message *MessageRequest) (*MessageRespons
 
 	r.MessageID = resp.MessageID
 
-	logger.Infow("message sent via SandboxConnector", "message", message)
+	logger.Infow("message sent via SandboxConnector", "sms", message)
 	return &r, nil
 }
 
-func (c *SandboxConnector) SendStatus(status *StatusRequest) (*StatusResponse, error) {
+func (c *SandboxConnector) SendStatus(status *SendStatusRequest) (*SendStatusResponse, error) {
 	return nil, models.ErrSendFailed
 }

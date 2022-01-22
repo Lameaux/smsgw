@@ -8,6 +8,7 @@ import (
 
 	"euromoby.com/smsgw/internal/config"
 	"euromoby.com/smsgw/internal/logger"
+	"euromoby.com/smsgw/internal/notifiers"
 	"euromoby.com/smsgw/internal/providers/connectors"
 	"euromoby.com/smsgw/internal/routes"
 	"euromoby.com/smsgw/internal/workers"
@@ -15,23 +16,26 @@ import (
 
 func main() {
 	app := config.NewAppConfig()
-	connectorRepo := connectors.NewConnectorRepository()
 
-	startWorkers(app, connectorRepo)
+	startWorkers(app)
 
 	logger.Infow("Starting server", "port", app.Port)
 	routes.Gin(app).Run(":" + app.Port)
 }
 
-func startWorkers(app *config.AppConfig, c *connectors.ConnectorRepository) {
+func startWorkers(app *config.AppConfig) {
 	sigChannel := make(chan os.Signal, 1)
 	signal.Notify(sigChannel, os.Interrupt, syscall.SIGTERM)
 
+	c := connectors.NewConnectorRepository()
 	ow := workers.NewOutboundMessageWorker(app, c)
+
+	n := notifiers.NewOutboundNotifier()
+	on := workers.NewOutboundDeliveryWorker(app, n)
 
 	runners := []*workers.Runner{
 		workers.NewRunner(ow),
-		// workers.NewRunner(ow),
+		workers.NewRunner(on),
 		// workers.NewRunner(ow),
 	}
 
