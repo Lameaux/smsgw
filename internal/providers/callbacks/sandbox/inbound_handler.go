@@ -4,19 +4,18 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"euromoby.com/smsgw/internal/config"
 	"euromoby.com/smsgw/internal/models"
-	"euromoby.com/smsgw/internal/repos"
+	"euromoby.com/smsgw/internal/services"
 	"euromoby.com/smsgw/internal/utils"
 	"github.com/gin-gonic/gin"
 )
 
 type InboundHandler struct {
-	app *config.AppConfig
+	service *services.InboundService
 }
 
-func NewInboundHandler(app *config.AppConfig) *InboundHandler {
-	return &InboundHandler{app}
+func NewInboundHandler(service *services.InboundService) *InboundHandler {
+	return &InboundHandler{service}
 }
 
 func (h *InboundHandler) ReceiveMessage(c *gin.Context) {
@@ -26,20 +25,9 @@ func (h *InboundHandler) ReceiveMessage(c *gin.Context) {
 		return
 	}
 
-	ctx, done := repos.DBConnContext()
-	defer done()
-
-	conn, err := h.app.DBPool.Acquire(ctx)
-	if err != nil {
-		utils.ErrorJSON(c, http.StatusInternalServerError, err)
-		return
-	}
-	defer conn.Release()
-
-	inboundMessageRepo := repos.NewInboundMessageRepo(conn)
 	m := h.makeInboundMessage(mreq)
 
-	err = inboundMessageRepo.Save(m)
+	err = h.service.SaveMessage(m)
 	if err != nil {
 		switch err {
 		case models.ErrDuplicateProviderMessageID:
@@ -55,22 +43,22 @@ func (h *InboundHandler) ReceiveMessage(c *gin.Context) {
 }
 
 func (h *InboundHandler) parseRequest(r *http.Request) (*InboundMessage, error) {
-	var mreq InboundMessage
+	var p InboundMessage
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
 
-	err := dec.Decode(&mreq)
+	err := dec.Decode(&p)
 	if err != nil {
 		return nil, err
 	}
 
-	msisdn, err := utils.NormalizeMSISDN(mreq.MSISDN)
+	msisdn, err := utils.NormalizeMSISDN(p.MSISDN)
 	if err != nil {
 		return nil, err
 	}
-	mreq.MSISDN = msisdn
+	p.MSISDN = msisdn
 
-	return &mreq, nil
+	return &p, nil
 }
 
 func (h *InboundHandler) makeInboundMessage(mreq *InboundMessage) *models.InboundMessage {

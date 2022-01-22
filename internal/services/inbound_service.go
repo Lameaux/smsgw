@@ -33,6 +33,20 @@ func (s *InboundService) FindByShortcodeAndID(shortcode, id string) (*models.Inb
 	return inboundMessageRepo.FindByShortcodeAndID(shortcode, id)
 }
 
+func (s *InboundService) SaveMessage(m *models.InboundMessage) error {
+	ctx, done := repos.DBConnContext()
+	defer done()
+
+	conn, err := s.app.DBPool.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	inboundMessageRepo := repos.NewInboundMessageRepo(conn)
+	return inboundMessageRepo.Save(m)
+}
+
 func (s *InboundService) AckByShortcodeAndID(shortcode, id string) (*models.InboundMessage, error) {
 	ctx, cancel := repos.DBTxContext()
 	defer cancel()

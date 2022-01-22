@@ -30,9 +30,6 @@ func Gin(app *config.AppConfig) *gin.Engine {
 
 	cb := handlers.NewCallbackHandler(app)
 
-	sandboxInbound := sandbox.NewInboundHandler(app)
-	sandboxOutbound := sandbox.NewOutboundHandler(outboundService)
-
 	auth := middlewares.NewAuthenticator(app)
 
 	m := r.Group("/v1/sms/messages")
@@ -72,8 +69,7 @@ func Gin(app *config.AppConfig) *gin.Engine {
 
 	ps := r.Group("/v1/sms/providers/sandbox")
 	{
-		ps.POST("/inbound/message", sandboxInbound.ReceiveMessage)
-		ps.POST("/outbound/status", sandboxOutbound.Ack)
+		sandbox.SetupRoutes(ps, inboundService, outboundService)
 	}
 
 	return r
