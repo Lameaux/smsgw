@@ -6,6 +6,7 @@ import (
 	"euromoby.com/smsgw/internal/db"
 	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/models"
+	"euromoby.com/smsgw/internal/utils"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -27,7 +28,7 @@ func NewOutboundMessageRepo(db db.Conn) *OutboundMessageRepo {
 	return &OutboundMessageRepo{db}
 }
 
-func (r *OutboundMessageRepo) FindByID(merchantID, id string) (*models.OutboundMessage, error) {
+func (r *OutboundMessageRepo) FindByMerchantAndID(merchantID, id string) (*models.OutboundMessage, error) {
 	stmt := selectOutboundMessagesBase + "where merchant_id = $1 AND id = $2"
 
 	ctx, cancel := DBQueryContext()
@@ -45,14 +46,14 @@ func (r *OutboundMessageRepo) FindByID(merchantID, id string) (*models.OutboundM
 	}
 }
 
-func (r *OutboundMessageRepo) FindByMessageOrderID(merchantID, id string) ([]*models.OutboundMessage, error) {
+func (r *OutboundMessageRepo) FindByMerchantAndOrderID(merchantID, orderID string) ([]*models.OutboundMessage, error) {
 	var messages []*models.OutboundMessage
 
 	stmt := selectOutboundMessagesBase + "where merchant_id = $1 AND message_order_id = $2"
 
 	ctx, cancel := DBQueryContext()
 	defer cancel()
-	rows, err := r.db.Query(ctx, stmt, merchantID, id)
+	rows, err := r.db.Query(ctx, stmt, merchantID, orderID)
 	if err != nil {
 		return nil, err
 	}
@@ -68,6 +69,24 @@ func (r *OutboundMessageRepo) FindByMessageOrderID(merchantID, id string) ([]*mo
 	}
 
 	return messages, nil
+}
+
+func (r *OutboundMessageRepo) FindByProviderAndMessageID(providerID, messageID string) (*models.OutboundMessage, error) {
+	stmt := selectOutboundMessagesBase + "where provider_id = $1 AND provider_message_id = $2"
+
+	ctx, cancel := DBQueryContext()
+	defer cancel()
+	row := r.db.QueryRow(ctx, stmt, providerID, messageID)
+
+	var om models.OutboundMessage
+	switch err := r.scanRow(row, &om); err {
+	case pgx.ErrNoRows:
+		return nil, nil
+	case nil:
+		return &om, nil
+	default:
+		return nil, err
+	}
 }
 
 func (r *OutboundMessageRepo) FindByQuery(q *inputs.OutboundMessageSearchParams) ([]*models.OutboundMessage, error) {
@@ -105,13 +124,13 @@ func (r *OutboundMessageRepo) FindByQuery(q *inputs.OutboundMessageSearchParams)
 func (r *OutboundMessageRepo) FindOneForProcessing() (*models.OutboundMessage, error) {
 	stmt := selectOutboundMessagesBase + `
 	where status = $1
-	and next_attempt_at < now()
+	and next_attempt_at < $2
 	for update skip locked
  	limit 1
 	`
 	ctx, cancel := DBQueryContext()
 	defer cancel()
-	row := r.db.QueryRow(ctx, stmt, models.OutboundMessageStatusNew)
+	row := r.db.QueryRow(ctx, stmt, models.OutboundMessageStatusNew, utils.Now())
 
 	var om models.OutboundMessage
 	switch err := r.scanRow(row, &om); err {
@@ -172,21 +191,26 @@ func (r *OutboundMessageRepo) Save(om *models.OutboundMessage) error {
 	return nil
 }
 
-func (r *OutboundMessageRepo) UpdateStatus(om *models.OutboundMessage) error {
+func (r *OutboundMessageRepo) Update(om *models.OutboundMessage) error {
 	ctx, cancel := DBQueryContext()
 	defer cancel()
 
 	stmt := `update outbound_messages
 	set status = $1,
 	provider_id = $2, provider_response = $3, provider_message_id = $4,
-	updated_at = $5
-	where id = $6`
+	next_attempt_at = $5, attempt_counter = $6,
+	updated_at = $7
+	where id = $8`
+
+	om.UpdatedAt = utils.Now()
 
 	_, err := r.db.Exec(ctx, stmt,
 		om.Status,
 		om.ProviderID,
 		om.ProviderResponse,
 		om.ProviderMessageID,
+		om.NextAttemptAt,
+		om.AttemptCounter,
 		om.UpdatedAt,
 		om.ID,
 	)

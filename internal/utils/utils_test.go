@@ -2,6 +2,7 @@ package utils
 
 import (
 	"testing"
+	"time"
 )
 
 func TestGetEnv(t *testing.T) {
@@ -34,5 +35,15 @@ func TestNormalizeMSISDN(t *testing.T) {
 		if normalized != tt.normalized || err != tt.err {
 			t.Errorf("Invalid result for %s. Expected: %s, %s. Got: %s %s.", tt.msisdn, tt.normalized, tt.err, normalized, err)
 		}
+	}
+}
+
+func Test_CalculateNextAttemptTime(t *testing.T) {
+	now := Now()
+	next := CalculateNextAttemptTime(0)
+	diff := next.Sub(now)
+
+	if diff < 30*time.Second {
+		t.Errorf("Invalid interval. Expected: 30. Got %v", diff)
 	}
 }

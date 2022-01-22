@@ -31,8 +31,8 @@ func startWorkers(app *config.AppConfig, c *connectors.ConnectorRepository) {
 
 	runners := []*workers.Runner{
 		workers.NewRunner(ow),
-		workers.NewRunner(ow),
-		workers.NewRunner(ow),
+		// workers.NewRunner(ow),
+		// workers.NewRunner(ow),
 	}
 
 	var wg sync.WaitGroup
@@ -60,6 +60,7 @@ func startWorkers(app *config.AppConfig, c *connectors.ConnectorRepository) {
 		logger.Infow("Shutting down...")
 		app.Shutdown()
 
+		logger.Infow("Exiting...")
 		os.Exit(0)
 	}()
 }

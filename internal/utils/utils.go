@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"math"
 	"os"
 	"regexp"
 	"time"
@@ -52,4 +53,8 @@ func NormalizeMSISDN(msisdn string) (string, error) {
 	}
 
 	return match[2], nil
+}
+
+func CalculateNextAttemptTime(counter int) time.Time {
+	return Now().Add(time.Duration(30*math.Pow(2, float64(counter))) * time.Second)
 }

@@ -40,7 +40,7 @@ func (s *MessageOrderService) FindByMerchantAndID(merchantID, id string) (*views
 
 	outboundMessageRepo := repos.NewOutboundMessageRepo(conn)
 
-	messages, err := outboundMessageRepo.FindByMessageOrderID(merchantID, id)
+	messages, err := outboundMessageRepo.FindByMerchantAndOrderID(merchantID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -76,13 +76,13 @@ func (s *MessageOrderService) SendMessage(params *inputs.SendMessageParams) (*vi
 	if err != nil {
 		return nil, err
 	}
+	defer tx.Rollback(ctx)
 
 	messageOrderRepo := repos.NewMessageOrderRepo(tx)
 
 	order := s.makeMessageOrder(params)
 	err = messageOrderRepo.Save(order)
 	if err != nil {
-		tx.Rollback(ctx)
 		return nil, err
 	}
 
@@ -98,12 +98,13 @@ func (s *MessageOrderService) SendMessage(params *inputs.SendMessageParams) (*vi
 	for i := range messages {
 		err = outboundMessageRepo.Save(messages[i])
 		if err != nil {
-			tx.Rollback(ctx)
 			return nil, err
 		}
 	}
 
-	tx.Commit(ctx)
+	if err = tx.Commit(ctx); err != nil {
+		return nil, err
+	}
 
 	return views.NewMessageOrderStatus(order, messages), nil
 }

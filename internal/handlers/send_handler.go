@@ -31,7 +31,7 @@ func (h *SendHandler) SendMessage(c *gin.Context) {
 	if err != nil {
 		switch err {
 		case models.ErrDuplicateClientTransactionID:
-			utils.ErrorJSON(c, http.StatusConflict, err)
+			c.JSON(http.StatusConflict, result)
 		default:
 			utils.ErrorJSON(c, http.StatusInternalServerError, err)
 		}

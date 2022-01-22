@@ -6,6 +6,7 @@ import (
 	"euromoby.com/smsgw/internal/db"
 	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/models"
+	"euromoby.com/smsgw/internal/utils"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 )
@@ -136,9 +137,11 @@ func (r *InboundMessageRepo) Save(im *models.InboundMessage) error {
 	return nil
 }
 
-func (r *InboundMessageRepo) UpdateStatus(im *models.InboundMessage) error {
+func (r *InboundMessageRepo) Update(im *models.InboundMessage) error {
 	ctx, cancel := DBQueryContext()
 	defer cancel()
+
+	im.UpdatedAt = utils.Now()
 
 	stmt := `update inbound_messages
 	set status = $1, updated_at = $2

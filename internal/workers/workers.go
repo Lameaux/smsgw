@@ -2,6 +2,7 @@ package workers
 
 import (
 	"fmt"
+	"runtime/debug"
 	"time"
 
 	"euromoby.com/smsgw/internal/logger"
@@ -67,6 +68,10 @@ func (r *Runner) recoverPanic() {
 		if !ok {
 			err = fmt.Errorf("%v", e)
 		}
-		logger.Errorw("panic", "error", err, "worker", r.w.Name())
+		logger.Errorw("panic",
+			"error", err,
+			"worker", r.w.Name(),
+			"stacktrace", string(debug.Stack()),
+		)
 	}
 }

@@ -46,3 +46,16 @@ func MakeInboundDeliveryNotification(message *InboundMessage) *DeliveryNotificat
 		UpdatedAt:      now,
 	}
 }
+
+func MakeOutboundDeliveryNotification(message *OutboundMessage) *DeliveryNotification {
+	now := utils.Now()
+	return &DeliveryNotification{
+		MessageType:    MessageTypeOutbound,
+		MessageID:      message.ID,
+		Status:         DeliveryNotificationStatusNew,
+		NextAttemptAt:  now,
+		AttemptCounter: 0,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}
+}

@@ -43,7 +43,7 @@ func (h *InboundHandler) ReceiveMessage(c *gin.Context) {
 	if err != nil {
 		switch err {
 		case models.ErrDuplicateProviderMessageID:
-			utils.ErrorJSON(c, http.StatusConflict, err)
+			c.JSON(http.StatusConflict, m)
 		default:
 			utils.ErrorJSON(c, http.StatusInternalServerError, err)
 		}
@@ -51,7 +51,7 @@ func (h *InboundHandler) ReceiveMessage(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, &m)
+	c.JSON(http.StatusCreated, m)
 }
 
 func (h *InboundHandler) parseRequest(r *http.Request) (*InboundMessage, error) {

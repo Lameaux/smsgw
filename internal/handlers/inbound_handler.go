@@ -51,23 +51,23 @@ func (h *InboundHandler) Ack(c *gin.Context) {
 		return
 	}
 
-	message, err := h.service.AckByShortcodeAndID(p.Shortcode, p.ID)
+	m, err := h.service.AckByShortcodeAndID(p.Shortcode, p.ID)
 	if err != nil {
 		switch err {
 		case models.ErrAlreadyAcked:
-			utils.ErrorJSON(c, http.StatusConflict, err)
+			c.JSON(http.StatusConflict, m)
 		default:
 			utils.ErrorJSON(c, http.StatusInternalServerError, err)
 		}
 		return
 	}
 
-	if message == nil {
+	if m == nil {
 		utils.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
 		return
 	}
 
-	c.JSON(http.StatusOK, message)
+	c.JSON(http.StatusOK, m)
 }
 
 func (h *InboundHandler) Search(c *gin.Context) {

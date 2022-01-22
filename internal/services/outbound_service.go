@@ -28,7 +28,7 @@ func (s *OutboundService) FindByMerchantAndID(merchantID, id string) (*views.Out
 
 	outboundMessageRepo := repos.NewOutboundMessageRepo(conn)
 
-	message, err := outboundMessageRepo.FindByID(merchantID, id)
+	message, err := outboundMessageRepo.FindByMerchantAndID(merchantID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -49,6 +49,48 @@ func (s *OutboundService) FindByMerchantAndID(merchantID, id string) (*views.Out
 	}
 
 	return views.NewOutboundMessageDetail(message, messageOrder), nil
+}
+
+func (s *OutboundService) AckByProviderAndMessageID(providerID, messageID string) (*models.OutboundMessage, error) {
+	ctx, cancel := repos.DBTxContext()
+	defer cancel()
+
+	tx, err := s.app.DBPool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	outboundMessageRepo := repos.NewOutboundMessageRepo(tx)
+	message, err := outboundMessageRepo.FindByProviderAndMessageID(providerID, messageID)
+
+	if err != nil || message == nil {
+		return message, err
+	}
+
+	if message.Status == models.OutboundMessageStatusDelivered {
+		return nil, models.ErrAlreadyAcked
+	}
+
+	message.Status = models.OutboundMessageStatusDelivered
+	err = outboundMessageRepo.Update(message)
+	if err != nil {
+		return nil, err
+	}
+
+	notificationRepo := repos.NewDeliveryNotificationRepo(tx)
+
+	n := models.MakeOutboundDeliveryNotification(message)
+	err = notificationRepo.Save(n)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+
+	return message, err
 }
 
 func (s *OutboundService) FindByQuery(p *inputs.OutboundMessageSearchParams) ([]*models.OutboundMessage, error) {

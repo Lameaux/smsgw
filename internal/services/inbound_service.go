@@ -5,7 +5,6 @@ import (
 	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/models"
 	"euromoby.com/smsgw/internal/repos"
-	"euromoby.com/smsgw/internal/utils"
 )
 
 type InboundService struct {
@@ -42,25 +41,22 @@ func (s *InboundService) AckByShortcodeAndID(shortcode, id string) (*models.Inbo
 	if err != nil {
 		return nil, err
 	}
+	defer tx.Rollback(ctx)
 
 	inboundMessageRepo := repos.NewInboundMessageRepo(tx)
 	message, err := inboundMessageRepo.FindByShortcodeAndID(shortcode, id)
 
 	if err != nil || message == nil {
-		tx.Rollback(ctx)
 		return message, err
 	}
 
 	if message.Status == models.InboundMessageStatusDelivered {
-		tx.Rollback(ctx)
 		return nil, models.ErrAlreadyAcked
 	}
 
 	message.Status = models.InboundMessageStatusDelivered
-	message.UpdatedAt = utils.Now()
-	err = inboundMessageRepo.UpdateStatus(message)
+	err = inboundMessageRepo.Update(message)
 	if err != nil {
-		tx.Rollback(ctx)
 		return nil, err
 	}
 
@@ -69,11 +65,12 @@ func (s *InboundService) AckByShortcodeAndID(shortcode, id string) (*models.Inbo
 	n := models.MakeInboundDeliveryNotification(message)
 	err = notificationRepo.Save(n)
 	if err != nil {
-		tx.Rollback(ctx)
 		return nil, err
 	}
 
-	tx.Commit(ctx)
+	if err = tx.Commit(ctx); err != nil {
+		return nil, err
+	}
 
 	return message, err
 }

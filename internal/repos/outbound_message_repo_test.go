@@ -20,10 +20,10 @@ func TestOutboundMessageRepo_Save(t *testing.T) {
 	assert.Equal(t, models.OutboundMessageStatusNew, om.Status, "Invalid status")
 }
 
-func TestOutboundMessageRepo_FindByID(t *testing.T) {
+func TestOutboundMessageRepo_FindByMerchantAndID(t *testing.T) {
 	r := NewOutboundMessageRepo(TestAppConfig.DBPool)
 
-	found, err := r.FindByID(utils.NewUUID(), utils.NewUUID())
+	found, err := r.FindByMerchantAndID(utils.NewUUID(), utils.NewUUID())
 	assert.Nil(t, err, "unexpected error")
 	assert.Nil(t, found, "wrong OutboundMessage found")
 
@@ -32,17 +32,17 @@ func TestOutboundMessageRepo_FindByID(t *testing.T) {
 	err = r.Save(om)
 	require.NoError(t, err, "Saving OutboundMessage failed")
 
-	found, err = r.FindByID(merchantID, om.ID)
+	found, err = r.FindByMerchantAndID(merchantID, om.ID)
 	assert.Nil(t, err, "unexpected error")
 	assert.NotNil(t, found, "OutboundMessage not found")
 
 	assert.Equal(t, om, found, "OutboundMessage is not equal")
 }
 
-func TestOutboundMessageRepo_FindByMessageOrderID(t *testing.T) {
+func TestOutboundMessageRepo_FindByMerchantAndOrderID(t *testing.T) {
 	r := NewOutboundMessageRepo(TestAppConfig.DBPool)
 
-	res, err := r.FindByMessageOrderID(utils.NewUUID(), utils.NewUUID())
+	res, err := r.FindByMerchantAndOrderID(utils.NewUUID(), utils.NewUUID())
 	require.NoError(t, err, "Finding OutboundMessage failed")
 	assert.Equal(t, []*models.OutboundMessage(nil), res, "wrong OutboundMessage found")
 
@@ -52,7 +52,7 @@ func TestOutboundMessageRepo_FindByMessageOrderID(t *testing.T) {
 	err = r.Save(om)
 	require.NoError(t, err, "Saving OutboundMessage failed")
 
-	found, err := r.FindByMessageOrderID(merchantID, messageOrderID)
+	found, err := r.FindByMerchantAndOrderID(merchantID, messageOrderID)
 	require.NoError(t, err, "Finding OutboundMessage failed")
 	assert.NotEmpty(t, found, "OutboundMessage not found")
 	assert.Equal(t, om, found[0], "OutboundMessage is not equal")
