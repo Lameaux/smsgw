@@ -1,6 +1,6 @@
 package sandbox
 
-type SandboxInboundMessage struct {
+type InboundMessage struct {
 	MessageID string `json:"message_id"`
 	Shortcode string `json:"shortcode"`
 	MSISDN    string `json:"msisdn"`

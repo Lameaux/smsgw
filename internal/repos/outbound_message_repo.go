@@ -27,12 +27,12 @@ func NewOutboundMessageRepo(db db.Conn) *OutboundMessageRepo {
 	return &OutboundMessageRepo{db}
 }
 
-func (r *OutboundMessageRepo) FindByID(merchantID, ID string) (*models.OutboundMessage, error) {
+func (r *OutboundMessageRepo) FindByID(merchantID, id string) (*models.OutboundMessage, error) {
 	stmt := selectOutboundMessagesBase + "where merchant_id = $1 AND id = $2"
 
 	ctx, cancel := DBQueryContext()
 	defer cancel()
-	row := r.db.QueryRow(ctx, stmt, merchantID, ID)
+	row := r.db.QueryRow(ctx, stmt, merchantID, id)
 
 	var om models.OutboundMessage
 	switch err := r.scanRow(row, &om); err {
@@ -45,14 +45,14 @@ func (r *OutboundMessageRepo) FindByID(merchantID, ID string) (*models.OutboundM
 	}
 }
 
-func (r *OutboundMessageRepo) FindByMessageOrderID(merchantID, ID string) ([]*models.OutboundMessage, error) {
+func (r *OutboundMessageRepo) FindByMessageOrderID(merchantID, id string) ([]*models.OutboundMessage, error) {
 	var messages []*models.OutboundMessage
 
 	stmt := selectOutboundMessagesBase + "where merchant_id = $1 AND message_order_id = $2"
 
 	ctx, cancel := DBQueryContext()
 	defer cancel()
-	rows, err := r.db.Query(ctx, stmt, merchantID, ID)
+	rows, err := r.db.Query(ctx, stmt, merchantID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +164,6 @@ func (r *OutboundMessageRepo) Save(om *models.OutboundMessage) error {
 		om.CreatedAt,
 		om.UpdatedAt,
 	).Scan(&insertedID)
-
 	if err != nil {
 		return err
 	}

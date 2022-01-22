@@ -12,9 +12,11 @@ var TestAppConfig *config.AppConfig
 
 func TestMain(m *testing.M) {
 	TestAppConfig = config.NewTestAppConfig()
-	defer TestAppConfig.Shutdown()
 
 	utils.CleanupDatabase(TestAppConfig.DBPool)
 
-	os.Exit(m.Run())
+	os.Exit(func() int {
+		defer TestAppConfig.Shutdown()
+		return m.Run()
+	}())
 }

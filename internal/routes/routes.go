@@ -30,8 +30,8 @@ func Gin(app *config.AppConfig) *gin.Engine {
 
 	cb := handlers.NewCallbackHandler(app)
 
-	sandboxInbound := sandbox.NewSandboxInboundHandler(app)
-	sandboxOutbound := sandbox.NewSandboxOutboundHandler(app)
+	sandboxInbound := sandbox.NewInboundHandler(app)
+	sandboxOutbound := sandbox.NewOutboundHandler(app)
 
 	auth := middlewares.NewAuthenticator(app)
 

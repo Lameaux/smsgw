@@ -1,6 +1,6 @@
 package sandbox
 
-type SandboxOutboundStatus struct {
+type OutboundStatus struct {
 	MessageID string `json:"message_id"`
 	Status    string `json:"status"`
 }

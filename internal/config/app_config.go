@@ -20,16 +20,22 @@ type AppConfig struct {
 	WorkerSleep time.Duration
 }
 
-const appName = "smsgw"
-const version = "0.1"
+const (
+	appName = "smsgw"
+	version = "0.1"
+)
 
-const defaultWaitTimeout = "15"
-const defaultPort = "8080"
+const (
+	defaultWaitTimeout = "15"
+	defaultPort        = "8080"
+)
 
 const defaultWorkerSleep = 5
 
-const TestApiKey = "test-api-key"
-const TestMerchantID = "d70c94da-dac4-4c0c-a6db-97f1740f29aa"
+const (
+	TestAPIKey     = "test-api-key"
+	TestMerchantID = "d70c94da-dac4-4c0c-a6db-97f1740f29aa"
+)
 
 func DefaultAppConfig() *AppConfig {
 	port := utils.GetEnv("PORT", defaultPort)
@@ -47,7 +53,6 @@ func DefaultAppConfig() *AppConfig {
 		WorkerSleep: time.Duration(defaultWorkerSleep) * time.Second,
 		Merchants:   loadMerchants(),
 	}
-
 }
 
 func NewAppConfig() *AppConfig {
@@ -68,7 +73,7 @@ func NewTestAppConfig() *AppConfig {
 	appConfig.DBPool = newPGXPool(testDatabaseURI)
 
 	// Add API Key for unit tests
-	appConfig.Merchants[TestApiKey] = TestMerchantID
+	appConfig.Merchants[TestAPIKey] = TestMerchantID
 
 	return appConfig
 }

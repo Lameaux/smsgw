@@ -11,15 +11,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type SandboxInboundHandler struct {
+type InboundHandler struct {
 	app *config.AppConfig
 }
 
-func NewSandboxInboundHandler(app *config.AppConfig) *SandboxInboundHandler {
-	return &SandboxInboundHandler{app}
+func NewInboundHandler(app *config.AppConfig) *InboundHandler {
+	return &InboundHandler{app}
 }
 
-func (h *SandboxInboundHandler) ReceiveMessage(c *gin.Context) {
+func (h *InboundHandler) ReceiveMessage(c *gin.Context) {
 	mreq, err := h.parseRequest(c.Request)
 	if err != nil {
 		utils.ErrorJSON(c, http.StatusBadRequest, err)
@@ -54,8 +54,8 @@ func (h *SandboxInboundHandler) ReceiveMessage(c *gin.Context) {
 	c.JSON(http.StatusCreated, &m)
 }
 
-func (h *SandboxInboundHandler) parseRequest(r *http.Request) (*SandboxInboundMessage, error) {
-	var mreq SandboxInboundMessage
+func (h *InboundHandler) parseRequest(r *http.Request) (*InboundMessage, error) {
+	var mreq InboundMessage
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
 
@@ -73,7 +73,7 @@ func (h *SandboxInboundHandler) parseRequest(r *http.Request) (*SandboxInboundMe
 	return &mreq, nil
 }
 
-func (h *SandboxInboundHandler) makeInboundMessage(mreq *SandboxInboundMessage) *models.InboundMessage {
+func (h *InboundHandler) makeInboundMessage(mreq *InboundMessage) *models.InboundMessage {
 	now := utils.Now()
 	return &models.InboundMessage{
 		Shortcode:         mreq.Shortcode,

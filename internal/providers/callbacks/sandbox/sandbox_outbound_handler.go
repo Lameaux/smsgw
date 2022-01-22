@@ -10,15 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type SandboxOutboundHandler struct {
+type OutboundHandler struct {
 	app *config.AppConfig
 }
 
-func NewSandboxOutboundHandler(app *config.AppConfig) *SandboxOutboundHandler {
-	return &SandboxOutboundHandler{app}
+func NewOutboundHandler(app *config.AppConfig) *OutboundHandler {
+	return &OutboundHandler{app}
 }
 
-func (h SandboxOutboundHandler) ReceiveStatus(c *gin.Context) {
+func (h OutboundHandler) ReceiveStatus(c *gin.Context) {
 	mreq, err := h.parseRequest(c.Request)
 	if err != nil {
 		utils.ErrorJSON(c, http.StatusBadRequest, err)
@@ -40,8 +40,8 @@ func (h SandboxOutboundHandler) ReceiveStatus(c *gin.Context) {
 	c.JSON(http.StatusCreated, &mreq)
 }
 
-func (h SandboxOutboundHandler) parseRequest(r *http.Request) (*SandboxOutboundStatus, error) {
-	var mreq SandboxOutboundStatus
+func (h OutboundHandler) parseRequest(r *http.Request) (*OutboundStatus, error) {
+	var mreq OutboundStatus
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
 

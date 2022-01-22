@@ -42,7 +42,6 @@ func (w *OutboundMessageWorker) Run() (bool, error) {
 	outboundMessageRepo := repos.NewOutboundMessageRepo(tx)
 
 	message, err := outboundMessageRepo.FindOneForProcessing()
-
 	if err != nil {
 		tx.Rollback(ctx)
 		return false, err

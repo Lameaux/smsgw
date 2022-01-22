@@ -28,11 +28,11 @@ func NewMessageOrderRepo(db db.Conn) *MessageOrderRepo {
 	return &MessageOrderRepo{db}
 }
 
-func (r *MessageOrderRepo) FindByMerchantAndID(merchantID, ID string) (*models.MessageOrder, error) {
+func (r *MessageOrderRepo) FindByMerchantAndID(merchantID, id string) (*models.MessageOrder, error) {
 	stmt := selectMessageOrdersBase + "where merchant_id = $1 AND id = $2"
 	ctx, cancel := DBQueryContext()
 	defer cancel()
-	row := r.db.QueryRow(ctx, stmt, merchantID, ID)
+	row := r.db.QueryRow(ctx, stmt, merchantID, id)
 
 	var mo models.MessageOrder
 	switch err := r.scanMessageOrder(row, &mo); err {
@@ -114,7 +114,6 @@ func (r *MessageOrderRepo) Save(mo *models.MessageOrder) error {
 		mo.CreatedAt,
 		mo.UpdatedAt,
 	).Scan(&insertedID)
-
 	if err != nil {
 		return r.wrapError(err)
 	}

@@ -30,13 +30,13 @@ func NewInboundMessageRepo(db db.Conn) *InboundMessageRepo {
 	return &InboundMessageRepo{db}
 }
 
-func (r *InboundMessageRepo) FindByShortcodeAndID(shortcode, ID string) (*models.InboundMessage, error) {
+func (r *InboundMessageRepo) FindByShortcodeAndID(shortcode, id string) (*models.InboundMessage, error) {
 	ctx, cancel := DBQueryContext()
 	defer cancel()
 
 	stmt := selectInboundMessagesBase + "where shortcode = $1 AND id = $2"
 
-	row := r.db.QueryRow(ctx, stmt, shortcode, ID)
+	row := r.db.QueryRow(ctx, stmt, shortcode, id)
 
 	var im models.InboundMessage
 
@@ -128,7 +128,6 @@ func (r *InboundMessageRepo) Save(im *models.InboundMessage) error {
 		im.CreatedAt,
 		im.UpdatedAt,
 	).Scan(&insertedID)
-
 	if err != nil {
 		return r.wrapError(err)
 	}

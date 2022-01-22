@@ -29,7 +29,7 @@ func TestSendHandler_SendMessage(t *testing.T) {
 
 	recorder := performAuthRequest(h.SendMessage, http.MethodPost, "/", bytes.NewReader(s), header{
 		Key:   middlewares.HeaderXApiKey,
-		Value: config.TestApiKey,
+		Value: config.TestAPIKey,
 	})
 
 	if status := recorder.Code; status != http.StatusCreated {

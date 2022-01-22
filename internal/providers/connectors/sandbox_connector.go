@@ -25,6 +25,7 @@ type SandboxConnectorRequest struct {
 	MSISDN string `json:"msisdn"`
 	Body   string `json:"body"`
 }
+
 type SandboxConnectorResponse struct {
 	MessageID *string `json:"message_id"`
 }

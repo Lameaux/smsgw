@@ -50,7 +50,6 @@ func (r *Runner) executeTask() {
 	defer r.recoverPanic()
 	for {
 		hasNext, err := r.w.Run()
-
 		if err != nil {
 			logger.Error(err)
 			return

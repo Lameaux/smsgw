@@ -37,7 +37,6 @@ func (r *DeliveryNotificationRepo) Save(in *models.DeliveryNotification) error {
 		in.CreatedAt,
 		in.UpdatedAt,
 	).Scan(&insertedID)
-
 	if err != nil {
 		return err
 	}
