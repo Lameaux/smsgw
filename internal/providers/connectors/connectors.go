@@ -1,6 +1,9 @@
 package connectors
 
-import "euromoby.com/smsgw/internal/logger"
+import (
+	"euromoby.com/smsgw/internal/config"
+	"euromoby.com/smsgw/internal/logger"
+)
 
 type SendMessageRequest struct {
 	MSISDN              string
@@ -36,10 +39,10 @@ type ConnectorRepository struct {
 	connectors map[string]Connector
 }
 
-func NewConnectorRepository() *ConnectorRepository {
+func NewConnectorRepository(app *config.AppConfig) *ConnectorRepository {
 	connectors := make(map[string]Connector)
 
-	sandboxConnector := NewSandboxConnector()
+	sandboxConnector := NewSandboxConnector(app)
 	connectors[sandboxConnector.Name()] = sandboxConnector
 
 	return &ConnectorRepository{connectors}

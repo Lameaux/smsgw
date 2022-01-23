@@ -12,7 +12,6 @@ CREATE TABLE "delivery_notifications" (
     "updated_at" timestamp  NOT NULL
 );
 
-CREATE UNIQUE INDEX "delivery_message_id" ON "delivery_notifications" ( "message_type", "message_id" );
 CREATE INDEX "delivery_outbound_next_attempt_at" ON "delivery_notifications"
 ( "message_type", "status", "next_attempt_at" )
 WHERE "message_type" = 'o' AND "status" = 'n';

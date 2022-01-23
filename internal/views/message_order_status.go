@@ -1,16 +1,28 @@
 package views
 
-import "euromoby.com/smsgw/internal/models"
+import (
+	"fmt"
 
-type MessageOrderStatus struct {
+	"euromoby.com/smsgw/internal/models"
+)
+
+type MessageOrderDetail struct {
 	models.MessageOrder
 
-	Messages []*models.OutboundMessage `json:"messages"`
+	Messages []*OutboundMessageDetail `json:"messages"`
+	HREF     string                   `json:"href"`
 }
 
-func NewMessageOrderStatus(order *models.MessageOrder, messages []*models.OutboundMessage) *MessageOrderStatus {
-	return &MessageOrderStatus{
+func NewMessageOrderDetail(order *models.MessageOrder, messages []*models.OutboundMessage) *MessageOrderDetail {
+	var messageDetails []*OutboundMessageDetail
+
+	for _, message := range messages {
+		messageDetails = append(messageDetails, NewOutboundMessageDetail(message, nil))
+	}
+
+	return &MessageOrderDetail{
 		MessageOrder: *order,
-		Messages:     messages,
+		Messages:     messageDetails,
+		HREF:         fmt.Sprintf("/messages/status/%s", order.ID),
 	}
 }

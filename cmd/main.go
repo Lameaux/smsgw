@@ -27,10 +27,10 @@ func startWorkers(app *config.AppConfig) {
 	sigChannel := make(chan os.Signal, 1)
 	signal.Notify(sigChannel, os.Interrupt, syscall.SIGTERM)
 
-	c := connectors.NewConnectorRepository()
+	c := connectors.NewConnectorRepository(app)
 	ow := workers.NewOutboundMessageWorker(app, c)
 
-	n := notifiers.NewOutboundNotifier()
+	n := notifiers.NewOutboundNotifier(app)
 	on := workers.NewOutboundDeliveryWorker(app, n)
 
 	runners := []*workers.Runner{

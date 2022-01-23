@@ -1,17 +1,44 @@
 package notifiers
 
-import "euromoby.com/smsgw/internal/models"
+import (
+	"io"
 
-type OutboundNotifier struct{}
+	"euromoby.com/smsgw/internal/config"
+	"euromoby.com/smsgw/internal/logger"
+	"euromoby.com/smsgw/internal/models"
+)
 
-func NewOutboundNotifier() *OutboundNotifier {
-	return &OutboundNotifier{}
+type OutboundNotifier struct {
+	app *config.AppConfig
 }
 
-func (*OutboundNotifier) SendNotification(messageOrder *models.MessageOrder, message *models.OutboundMessage) (*SendNotificationResponse, error) {
-	body := "error"
-	r := SendNotificationResponse{
-		Body: &body,
+func NewOutboundNotifier(app *config.AppConfig) *OutboundNotifier {
+	return &OutboundNotifier{app}
+}
+
+func (on *OutboundNotifier) SendNotification(messageOrder *models.MessageOrder, message *models.OutboundMessage) (*SendNotificationResponse, error) {
+	httpResp, err := on.app.HTTPClient.Post(*messageOrder.NotificationURL, &message)
+	if err != nil {
+		return nil, err
 	}
-	return &r, models.ErrSendFailed
+	defer httpResp.Body.Close()
+
+	respBodyBytes, err := io.ReadAll(httpResp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	respBody := string(respBodyBytes)
+
+	r := SendNotificationResponse{
+		Body: &respBody,
+	}
+
+	statusOK := httpResp.StatusCode >= 200 && httpResp.StatusCode < 300
+	if !statusOK {
+		return &r, models.ErrSendFailed
+	}
+
+	logger.Infow("notification sent", "sms", message)
+	return &r, nil
 }

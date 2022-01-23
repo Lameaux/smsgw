@@ -17,7 +17,7 @@ func NewMessageOrderService(app *config.AppConfig) *MessageOrderService {
 	return &MessageOrderService{app}
 }
 
-func (s *MessageOrderService) FindByMerchantAndID(merchantID, id string) (*views.MessageOrderStatus, error) {
+func (s *MessageOrderService) FindByMerchantAndID(merchantID, id string) (*views.MessageOrderDetail, error) {
 	ctx, cancel := repos.DBConnContext()
 	defer cancel()
 
@@ -45,7 +45,7 @@ func (s *MessageOrderService) FindByMerchantAndID(merchantID, id string) (*views
 		return nil, err
 	}
 
-	return views.NewMessageOrderStatus(messageOrder, messages), nil
+	return views.NewMessageOrderDetail(messageOrder, messages), nil
 }
 
 func (s *MessageOrderService) FindByQuery(p *inputs.MessageOrderSearchParams) ([]*models.MessageOrder, error) {
@@ -68,7 +68,7 @@ func (s *MessageOrderService) FindByQuery(p *inputs.MessageOrderSearchParams) ([
 	return messageOrders, nil
 }
 
-func (s *MessageOrderService) SendMessage(params *inputs.SendMessageParams) (*views.MessageOrderStatus, error) {
+func (s *MessageOrderService) SendMessage(params *inputs.SendMessageParams) (*views.MessageOrderDetail, error) {
 	ctx, cancel := repos.DBTxContext()
 	defer cancel()
 
@@ -106,7 +106,7 @@ func (s *MessageOrderService) SendMessage(params *inputs.SendMessageParams) (*vi
 		return nil, err
 	}
 
-	return views.NewMessageOrderStatus(order, messages), nil
+	return views.NewMessageOrderDetail(order, messages), nil
 }
 
 func (s *MessageOrderService) makeMessageOrder(p *inputs.SendMessageParams) *models.MessageOrder {

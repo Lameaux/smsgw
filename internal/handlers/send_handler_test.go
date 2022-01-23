@@ -36,7 +36,7 @@ func TestSendHandler_SendMessage(t *testing.T) {
 		t.Errorf("Handler returned wrong status code. Expected: %d. Got: %d.", http.StatusCreated, status)
 	}
 
-	var output views.MessageOrderStatus
+	var output views.MessageOrderDetail
 	if err := json.NewDecoder(recorder.Body).Decode(&output); err != nil {
 		t.Errorf("Error decoding response body: %v", err)
 	}

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"euromoby.com/smsgw/internal/config"
+	"euromoby.com/smsgw/internal/db"
 	"euromoby.com/smsgw/internal/logger"
 	"euromoby.com/smsgw/internal/models"
 	"euromoby.com/smsgw/internal/providers/connectors"
@@ -68,11 +69,30 @@ func (w *OutboundMessageWorker) Run() (bool, error) {
 		return false, err
 	}
 
+	if err = w.sendNotification(tx, messageOrder, message); err != nil {
+		return false, err
+	}
+
 	if err = tx.Commit(ctx); err != nil {
 		return false, nil
 	}
 
 	return true, nil
+}
+
+func (w *OutboundMessageWorker) sendNotification(tx db.Conn, messageOrder *models.MessageOrder, message *models.OutboundMessage) error {
+	if message.Status == models.OutboundMessageStatusNew {
+		return nil
+	}
+
+	if messageOrder.NotificationURL == nil {
+		return nil
+	}
+
+	notificationRepo := repos.NewDeliveryNotificationRepo(tx)
+	n := models.MakeOutboundDeliveryNotification(message)
+
+	return notificationRepo.Save(n)
 }
 
 func (w *OutboundMessageWorker) sendToProvider(messageOrder *models.MessageOrder, message *models.OutboundMessage) {
@@ -94,6 +114,9 @@ func (w *OutboundMessageWorker) handleFailure(message *models.OutboundMessage, r
 	switch err {
 	case models.ErrSendFailed, models.ErrInvalidJSON:
 		message.ProviderResponse = resp.Body
+	case models.ErrDeadLetter:
+		message.Status = models.OutboundMessageStatusFailed
+		return
 	default:
 		errorText := err.Error()
 		message.ProviderResponse = &errorText

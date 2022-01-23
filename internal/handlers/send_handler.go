@@ -66,13 +66,18 @@ func (h *SendHandler) parseRequest(c *gin.Context) (*inputs.SendMessageParams, e
 }
 
 func (h *SendHandler) normalizeRecipients(input []string) ([]string, error) {
-	output := []string{}
+	m := make(map[string]bool)
 
 	for _, msisdn := range input {
 		msisdn, err := utils.NormalizeMSISDN(msisdn)
 		if err != nil {
 			return nil, err
 		}
+		m[msisdn] = true
+	}
+
+	var output []string
+	for msisdn := range m {
 		output = append(output, msisdn)
 	}
 

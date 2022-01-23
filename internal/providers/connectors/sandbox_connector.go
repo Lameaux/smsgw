@@ -1,12 +1,11 @@
 package connectors
 
 import (
-	"bytes"
 	"encoding/json"
 	"io"
-	"net/http"
 	"strings"
 
+	"euromoby.com/smsgw/internal/config"
 	"euromoby.com/smsgw/internal/logger"
 	"euromoby.com/smsgw/internal/models"
 )
@@ -16,7 +15,7 @@ const (
 )
 
 type SandboxConnector struct {
-	name         string
+	app          *config.AppConfig
 	countryCodes []string
 }
 
@@ -31,15 +30,15 @@ type SandboxMessageResponse struct {
 	MessageID *string `json:"message_id"`
 }
 
-func NewSandboxConnector() *SandboxConnector {
+func NewSandboxConnector(app *config.AppConfig) *SandboxConnector {
 	return &SandboxConnector{
-		name:         "sandbox",
+		app:          app,
 		countryCodes: []string{"420", "357", "380"},
 	}
 }
 
 func (c *SandboxConnector) Name() string {
-	return c.name
+	return "sandbox"
 }
 
 func (c *SandboxConnector) Accept(message *SendMessageRequest) bool {
@@ -59,14 +58,7 @@ func (c *SandboxConnector) SendMessage(message *SendMessageRequest) (*SendMessag
 		ClientTransactionID: message.ClientTransactionID,
 	}
 
-	jsonBody, err := json.Marshal(reqBody)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: setup timeouts
-
-	httpResp, err := http.Post(apiBaseURL+"/message", "application/json", bytes.NewBuffer(jsonBody))
+	httpResp, err := c.app.HTTPClient.Post(apiBaseURL+"/message", &reqBody)
 	if err != nil {
 		return nil, err
 	}

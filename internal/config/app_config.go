@@ -5,29 +5,36 @@ import (
 	"strconv"
 	"time"
 
+	"euromoby.com/smsgw/internal/httpclient"
 	"euromoby.com/smsgw/internal/logger"
 	"euromoby.com/smsgw/internal/utils"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type AppConfig struct {
-	Port        string
-	AppName     string
-	Version     string
-	WaitTimeout time.Duration
-	DBPool      *pgxpool.Pool
+	Port    string
+	AppName string
+	Version string
+
+	DBPool     *pgxpool.Pool
+	HTTPClient *httpclient.HTTPClient
+
 	Merchants   map[string]string
 	WorkerSleep time.Duration
+
+	WaitTimeout       time.Duration
+	ConnectionTimeout time.Duration
+	TLSTimeout        time.Duration
+	ReadTimeout       time.Duration
 }
 
 const (
-	appName = "smsgw"
-	version = "0.1"
-)
+	defaultPort = "8080"
 
-const (
-	defaultWaitTimeout = "15"
-	defaultPort        = "8080"
+	defaultWaitTimeout       = "15"
+	defaultConnectionTimeout = "5"
+	defaultTLSTimeout        = "5"
+	defaultReadTimeout       = "10"
 )
 
 const defaultWorkerSleep = 5
@@ -37,7 +44,7 @@ const (
 	TestMerchantID = "d70c94da-dac4-4c0c-a6db-97f1740f29aa"
 )
 
-func DefaultAppConfig() *AppConfig {
+func defaultAppConfig(databaseURI string) *AppConfig {
 	port := utils.GetEnv("PORT", defaultPort)
 
 	waitTimeout, err := strconv.Atoi(utils.GetEnv("WAIT_TIMEOUT", defaultWaitTimeout))
@@ -45,32 +52,54 @@ func DefaultAppConfig() *AppConfig {
 		logger.Fatal(err)
 	}
 
-	return &AppConfig{
-		AppName:     appName,
-		Version:     version,
-		Port:        port,
-		WaitTimeout: time.Duration(waitTimeout) * time.Second,
-		WorkerSleep: time.Duration(defaultWorkerSleep) * time.Second,
-		Merchants:   loadMerchants(),
+	connectionTimeout, err := strconv.Atoi(utils.GetEnv("CONNECTION_TIMEOUT", defaultConnectionTimeout))
+	if err != nil {
+		logger.Fatal(err)
 	}
+
+	tlsTimeout, err := strconv.Atoi(utils.GetEnv("TLS_TIMEOUT", defaultTLSTimeout))
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	readTimeout, err := strconv.Atoi(utils.GetEnv("READ_TIMEOUT", defaultReadTimeout))
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	app := &AppConfig{
+		AppName: "smsgw",
+		Version: "0.1",
+		Port:    port,
+
+		WaitTimeout:       time.Duration(waitTimeout) * time.Second,
+		ConnectionTimeout: time.Duration(connectionTimeout) * time.Second,
+		TLSTimeout:        time.Duration(tlsTimeout) * time.Second,
+		ReadTimeout:       time.Duration(readTimeout) * time.Second,
+
+		WorkerSleep: time.Duration(defaultWorkerSleep) * time.Second,
+	}
+
+	app.configureHTTPClient()
+	app.configureMerchants()
+	app.configurePGXPool(databaseURI)
+
+	return app
 }
 
 func NewAppConfig() *AppConfig {
-	logger.Infow("Starting", "app", appName, "version", version)
-
 	databaseURI := utils.GetEnv("DATABASE_URI", "postgres://root:heslo@localhost:5432/smsgw_test?&pool_max_conns=10")
 	logger.Infow("Connecting to database", "database_uri", databaseURI)
 
-	appConfig := DefaultAppConfig()
-	appConfig.DBPool = newPGXPool(databaseURI)
+	appConfig := defaultAppConfig(databaseURI)
+	logger.Infow("Starting", "app", appConfig.AppName, "version", appConfig.Version)
 
 	return appConfig
 }
 
 func NewTestAppConfig() *AppConfig {
 	testDatabaseURI := utils.GetEnv("DATABASE_URI", "postgres://root:heslo@localhost:5432/smsgw_test?&pool_max_conns=10")
-	appConfig := DefaultAppConfig()
-	appConfig.DBPool = newPGXPool(testDatabaseURI)
+	appConfig := defaultAppConfig(testDatabaseURI)
 
 	// Add API Key for unit tests
 	appConfig.Merchants[TestAPIKey] = TestMerchantID
@@ -78,14 +107,14 @@ func NewTestAppConfig() *AppConfig {
 	return appConfig
 }
 
-func loadMerchants() map[string]string {
-	return map[string]string{
+func (app *AppConfig) configureMerchants() {
+	app.Merchants = map[string]string{
 		"postman-api-key": "d70c94da-dac4-4c0c-a6db-97f1740f29a8",
 		"apikey1":         "d70c94da-dac4-4c0c-a6db-97f1740f29a9",
 	}
 }
 
-func newPGXPool(uri string) *pgxpool.Pool {
+func (app *AppConfig) configurePGXPool(uri string) {
 	pool, err := pgxpool.Connect(context.Background(), uri)
 	if err != nil {
 		logger.Fatal(err)
@@ -99,13 +128,21 @@ func newPGXPool(uri string) *pgxpool.Pool {
 		logger.Fatal(err)
 	}
 
-	return pool
+	app.DBPool = pool
 }
 
-func (config *AppConfig) CloseDBPool() {
-	config.DBPool.Close()
+func (app *AppConfig) configureHTTPClient() {
+	app.HTTPClient = httpclient.NewBuilder().
+		ConnectionTimeout(app.ConnectionTimeout).
+		TLSTimeout(app.TLSTimeout).
+		ReadTimeout(app.ReadTimeout).
+		Build()
 }
 
-func (config *AppConfig) Shutdown() {
-	defer config.CloseDBPool()
+func (app *AppConfig) CloseDBPool() {
+	app.DBPool.Close()
+}
+
+func (app *AppConfig) Shutdown() {
+	defer app.CloseDBPool()
 }
