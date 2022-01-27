@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 	"os/signal"
 	"sync"
@@ -33,10 +34,11 @@ func startWorkers(app *config.AppConfig) {
 	n := notifiers.NewOutboundNotifier(app)
 	on := workers.NewOutboundDeliveryWorker(app, n)
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	runners := []*workers.Runner{
-		workers.NewRunner(ow),
-		workers.NewRunner(on),
-		// workers.NewRunner(ow),
+		workers.NewRunner(ctx, ow),
+		workers.NewRunner(ctx, on),
 	}
 
 	var wg sync.WaitGroup
@@ -50,13 +52,11 @@ func startWorkers(app *config.AppConfig) {
 		}(r)
 	}
 
-	go func() {
+	go func(cancel context.CancelFunc) {
 		<-sigChannel
 		logger.Infow("The interrupt received. Waiting for workers to stop....")
 
-		for _, r := range runners {
-			r.Stop()
-		}
+		cancel()
 
 		wg.Wait()
 		logger.Infow("Workers stopped.")
@@ -66,5 +66,5 @@ func startWorkers(app *config.AppConfig) {
 
 		logger.Infow("Exiting...")
 		os.Exit(0)
-	}()
+	}(cancel)
 }

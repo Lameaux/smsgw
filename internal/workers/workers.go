@@ -1,6 +1,7 @@
 package workers
 
 import (
+	"context"
 	"fmt"
 	"runtime/debug"
 	"time"
@@ -16,14 +17,13 @@ type Worker interface {
 }
 
 type Runner struct {
-	w    Worker
-	done chan bool
+	w   Worker
+	ctx context.Context
 }
 
-func NewRunner(w Worker) *Runner {
+func NewRunner(ctx context.Context, w Worker) *Runner {
 	return &Runner{
-		w:    w,
-		done: make(chan bool),
+		w, ctx,
 	}
 }
 
@@ -36,16 +36,12 @@ func (r *Runner) Start() {
 		logger.Infow("worker is sleeping", "worker", r.w.Name())
 
 		select {
-		case <-r.done:
+		case <-r.ctx.Done():
 			logger.Infow("worker stopped", "worker", r.w.Name())
 			return
 		case <-time.After(r.w.SleepTime()):
 		}
 	}
-}
-
-func (r *Runner) Stop() {
-	close(r.done)
 }
 
 func (r *Runner) executeTask() {
