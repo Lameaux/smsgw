@@ -20,7 +20,7 @@ func main() {
 
 	startWorkers(app)
 
-	logger.Infow("Starting server", "port", app.Port)
+	logger.Infow("starting server", "port", app.Port)
 	routes.Gin(app).Run(":" + app.Port)
 }
 
@@ -54,17 +54,17 @@ func startWorkers(app *config.AppConfig) {
 
 	go func(cancel context.CancelFunc) {
 		<-sigChannel
-		logger.Infow("The interrupt received. Waiting for workers to stop....")
+		logger.Infow("the interrupt received, waiting for workers to stop")
 
 		cancel()
 
 		wg.Wait()
-		logger.Infow("Workers stopped.")
+		logger.Infow("workers stopped")
 
-		logger.Infow("Shutting down...")
+		logger.Infow("shutting down")
 		app.Shutdown()
 
-		logger.Infow("Exiting...")
+		logger.Infow("exiting")
 		os.Exit(0)
 	}(cancel)
 }

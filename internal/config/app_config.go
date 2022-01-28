@@ -144,5 +144,6 @@ func (app *AppConfig) CloseDBPool() {
 }
 
 func (app *AppConfig) Shutdown() {
-	defer app.CloseDBPool()
+	logger.Infow("closing DB pool")
+	app.CloseDBPool()
 }
