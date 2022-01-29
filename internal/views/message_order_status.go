@@ -14,7 +14,7 @@ type MessageOrderDetail struct {
 }
 
 func NewMessageOrderDetail(order *models.MessageOrder, messages []*models.OutboundMessage) *MessageOrderDetail {
-	var messageDetails []*OutboundMessageDetail
+	messageDetails := make([]*OutboundMessageDetail, 0, len(messages))
 
 	for _, message := range messages {
 		messageDetails = append(messageDetails, NewOutboundMessageDetail(message, nil))

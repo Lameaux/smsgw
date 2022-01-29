@@ -76,7 +76,7 @@ func (h *SendHandler) normalizeRecipients(input []string) ([]string, error) {
 		m[msisdn] = true
 	}
 
-	var output []string
+	output := make([]string, 0, len(m))
 	for msisdn := range m {
 		output = append(output, msisdn)
 	}
