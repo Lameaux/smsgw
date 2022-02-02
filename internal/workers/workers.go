@@ -27,7 +27,7 @@ func NewRunner(ctx context.Context, w Worker) *Runner {
 	}
 }
 
-func (r *Runner) Start() {
+func (r *Runner) Exec() error {
 	logger.Infow("worker started", "worker", r.w.Name())
 	for {
 		logger.Infow("worker is running", "worker", r.w.Name())
@@ -38,7 +38,7 @@ func (r *Runner) Start() {
 		select {
 		case <-r.ctx.Done():
 			logger.Infow("worker stopped", "worker", r.w.Name())
-			return
+			return nil
 		case <-time.After(r.w.SleepTime()):
 		}
 	}
