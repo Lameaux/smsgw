@@ -2,8 +2,6 @@ package models
 
 import (
 	"time"
-
-	"euromoby.com/smsgw/internal/utils"
 )
 
 type MessageOrder struct {
@@ -18,8 +16,8 @@ type MessageOrder struct {
 }
 
 func NewSimpleMessageOrder(merchantID string, body string) *MessageOrder {
-	generatedTransactionID := utils.NewUUID()
-	now := utils.Now()
+	generatedTransactionID := NewUUID()
+	now := TimeNow()
 	return &MessageOrder{
 		MerchantID:          merchantID,
 		Body:                body,

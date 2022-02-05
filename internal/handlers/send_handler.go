@@ -8,7 +8,7 @@ import (
 	"euromoby.com/smsgw/internal/middlewares"
 	"euromoby.com/smsgw/internal/models"
 	"euromoby.com/smsgw/internal/services"
-	"euromoby.com/smsgw/internal/utils"
+	"euromoby.com/smsgw/internal/views"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,7 +23,7 @@ func NewSendHandler(service *services.MessageOrderService) *SendHandler {
 func (h *SendHandler) SendMessage(c *gin.Context) {
 	p, err := h.parseRequest(c)
 	if err != nil {
-		utils.ErrorJSON(c, http.StatusBadRequest, err)
+		views.ErrorJSON(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -33,7 +33,7 @@ func (h *SendHandler) SendMessage(c *gin.Context) {
 		case models.ErrDuplicateClientTransactionID:
 			c.JSON(http.StatusConflict, result)
 		default:
-			utils.ErrorJSON(c, http.StatusInternalServerError, err)
+			views.ErrorJSON(c, http.StatusInternalServerError, err)
 		}
 
 		return

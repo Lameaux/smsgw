@@ -6,7 +6,6 @@ import (
 	"euromoby.com/smsgw/internal/db"
 	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/models"
-	"euromoby.com/smsgw/internal/utils"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 )
@@ -69,7 +68,7 @@ func (r *InboundMessageRepo) Update(im *models.InboundMessage) error {
 	ctx, cancel := DBQueryContext()
 	defer cancel()
 
-	im.UpdatedAt = utils.Now()
+	im.UpdatedAt = models.TimeNow()
 
 	stmt := `update inbound_messages
 	set status = $1, updated_at = $2

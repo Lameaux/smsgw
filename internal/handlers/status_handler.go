@@ -6,7 +6,7 @@ import (
 	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/middlewares"
 	"euromoby.com/smsgw/internal/services"
-	"euromoby.com/smsgw/internal/utils"
+	"euromoby.com/smsgw/internal/views"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,12 +23,12 @@ func (h *StatusHandler) Get(c *gin.Context) {
 
 	orderStatus, err := h.service.FindByMerchantAndID(p.MerchantID, p.ID)
 	if err != nil {
-		utils.ErrorJSON(c, http.StatusInternalServerError, err)
+		views.ErrorJSON(c, http.StatusInternalServerError, err)
 		return
 	}
 
 	if orderStatus == nil {
-		utils.ErrorJSON(c, http.StatusNotFound, ErrMessageOrderNotFound)
+		views.ErrorJSON(c, http.StatusNotFound, ErrMessageOrderNotFound)
 		return
 	}
 
@@ -38,13 +38,13 @@ func (h *StatusHandler) Get(c *gin.Context) {
 func (h *StatusHandler) Search(c *gin.Context) {
 	p, err := h.searchParams(c)
 	if err != nil {
-		utils.ErrorJSON(c, http.StatusBadRequest, err)
+		views.ErrorJSON(c, http.StatusBadRequest, err)
 		return
 	}
 
 	messageOrders, err := h.service.FindByQuery(p)
 	if err != nil {
-		utils.ErrorJSON(c, http.StatusInternalServerError, err)
+		views.ErrorJSON(c, http.StatusInternalServerError, err)
 		return
 	}
 

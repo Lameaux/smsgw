@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"euromoby.com/smsgw/internal/models"
-	"euromoby.com/smsgw/internal/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -12,7 +11,7 @@ import (
 func TestMessageOrderRepo_Save(t *testing.T) {
 	r := NewMessageOrderRepo(TestAppConfig.DBPool)
 
-	merchantID := utils.NewUUID()
+	merchantID := models.NewUUID()
 
 	mo := models.NewSimpleMessageOrder(merchantID, "hello world")
 	err := r.Save(mo)
@@ -25,11 +24,11 @@ func TestMessageOrderRepo_Save(t *testing.T) {
 func TestMessageOrderRepo_FindByMerchantAndID(t *testing.T) {
 	r := NewMessageOrderRepo(TestAppConfig.DBPool)
 
-	found, err := r.FindByMerchantAndID(utils.NewUUID(), utils.NewUUID())
+	found, err := r.FindByMerchantAndID(models.NewUUID(), models.NewUUID())
 	assert.Nil(t, err, "unexpected error")
 	assert.Nil(t, found, "wrong MessageOrder found")
 
-	merchantID := utils.NewUUID()
+	merchantID := models.NewUUID()
 	mo := models.NewSimpleMessageOrder(merchantID, "hello world")
 	err = r.Save(mo)
 	require.NoError(t, err, "Saving MessageOrder failed")

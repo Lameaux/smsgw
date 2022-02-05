@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"euromoby.com/smsgw/internal/models"
-	"euromoby.com/smsgw/internal/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -12,7 +11,7 @@ import (
 func TestOutboundMessageRepo_Save(t *testing.T) {
 	r := NewOutboundMessageRepo(TestAppConfig.DBPool)
 
-	om := models.NewOutboundMessage(utils.NewUUID(), utils.NewUUID(), 420123456789)
+	om := models.NewOutboundMessage(models.NewUUID(), models.NewUUID(), 420123456789)
 	err := r.Save(om)
 	require.NoError(t, err, "Saving OutboundMessage failed")
 
@@ -23,12 +22,12 @@ func TestOutboundMessageRepo_Save(t *testing.T) {
 func TestOutboundMessageRepo_FindByMerchantAndID(t *testing.T) {
 	r := NewOutboundMessageRepo(TestAppConfig.DBPool)
 
-	found, err := r.FindByMerchantAndID(utils.NewUUID(), utils.NewUUID())
+	found, err := r.FindByMerchantAndID(models.NewUUID(), models.NewUUID())
 	assert.Nil(t, err, "unexpected error")
 	assert.Nil(t, found, "wrong OutboundMessage found")
 
-	merchantID := utils.NewUUID()
-	om := models.NewOutboundMessage(merchantID, utils.NewUUID(), 420123456789)
+	merchantID := models.NewUUID()
+	om := models.NewOutboundMessage(merchantID, models.NewUUID(), 420123456789)
 	err = r.Save(om)
 	require.NoError(t, err, "Saving OutboundMessage failed")
 
@@ -42,12 +41,12 @@ func TestOutboundMessageRepo_FindByMerchantAndID(t *testing.T) {
 func TestOutboundMessageRepo_FindByMerchantAndOrderID(t *testing.T) {
 	r := NewOutboundMessageRepo(TestAppConfig.DBPool)
 
-	res, err := r.FindByMerchantAndOrderID(utils.NewUUID(), utils.NewUUID())
+	res, err := r.FindByMerchantAndOrderID(models.NewUUID(), models.NewUUID())
 	require.NoError(t, err, "Finding OutboundMessage failed")
 	assert.Equal(t, []*models.OutboundMessage(nil), res, "wrong OutboundMessage found")
 
-	merchantID := utils.NewUUID()
-	messageOrderID := utils.NewUUID()
+	merchantID := models.NewUUID()
+	messageOrderID := models.NewUUID()
 	om := models.NewOutboundMessage(merchantID, messageOrderID, 420123456789)
 	err = r.Save(om)
 	require.NoError(t, err, "Saving OutboundMessage failed")

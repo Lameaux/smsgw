@@ -2,8 +2,6 @@ package models
 
 import (
 	"time"
-
-	"euromoby.com/smsgw/internal/utils"
 )
 
 type OutboundMessageStatus string
@@ -31,7 +29,7 @@ type OutboundMessage struct {
 }
 
 func NewOutboundMessage(merchantID string, messageOrderID string, msisdn MSISDN) *OutboundMessage {
-	now := utils.Now()
+	now := TimeNow()
 	return &OutboundMessage{
 		MerchantID:     merchantID,
 		MessageOrderID: messageOrderID,

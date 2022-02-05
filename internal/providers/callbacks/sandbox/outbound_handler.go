@@ -6,7 +6,7 @@ import (
 
 	"euromoby.com/smsgw/internal/models"
 	"euromoby.com/smsgw/internal/services"
-	"euromoby.com/smsgw/internal/utils"
+	"euromoby.com/smsgw/internal/views"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,7 +21,7 @@ func NewOutboundHandler(service *services.OutboundService) *OutboundHandler {
 func (h OutboundHandler) Ack(c *gin.Context) {
 	p, err := h.parseRequest(c.Request)
 	if err != nil {
-		utils.ErrorJSON(c, http.StatusBadRequest, err)
+		views.ErrorJSON(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -31,13 +31,13 @@ func (h OutboundHandler) Ack(c *gin.Context) {
 		case models.ErrAlreadyAcked:
 			c.JSON(http.StatusConflict, m)
 		default:
-			utils.ErrorJSON(c, http.StatusInternalServerError, err)
+			views.ErrorJSON(c, http.StatusInternalServerError, err)
 		}
 		return
 	}
 
 	if m == nil {
-		utils.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
+		views.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
 		return
 	}
 

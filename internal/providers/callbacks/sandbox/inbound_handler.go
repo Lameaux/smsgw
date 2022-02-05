@@ -6,7 +6,7 @@ import (
 
 	"euromoby.com/smsgw/internal/models"
 	"euromoby.com/smsgw/internal/services"
-	"euromoby.com/smsgw/internal/utils"
+	"euromoby.com/smsgw/internal/views"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,13 +21,13 @@ func NewInboundHandler(service *services.InboundService) *InboundHandler {
 func (h *InboundHandler) ReceiveMessage(c *gin.Context) {
 	p, err := h.parseRequest(c.Request)
 	if err != nil {
-		utils.ErrorJSON(c, http.StatusBadRequest, err)
+		views.ErrorJSON(c, http.StatusBadRequest, err)
 		return
 	}
 
 	m, err := h.makeInboundMessage(p)
 	if err != nil {
-		utils.ErrorJSON(c, http.StatusBadRequest, err)
+		views.ErrorJSON(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -37,7 +37,7 @@ func (h *InboundHandler) ReceiveMessage(c *gin.Context) {
 		case models.ErrDuplicateProviderMessageID:
 			c.JSON(http.StatusConflict, m)
 		default:
-			utils.ErrorJSON(c, http.StatusInternalServerError, err)
+			views.ErrorJSON(c, http.StatusInternalServerError, err)
 		}
 
 		return
@@ -60,7 +60,7 @@ func (h *InboundHandler) parseRequest(r *http.Request) (*InboundMessage, error) 
 }
 
 func (h *InboundHandler) makeInboundMessage(im *InboundMessage) (*models.InboundMessage, error) {
-	now := utils.Now()
+	now := models.TimeNow()
 
 	normalized, err := models.NormalizeMSISDN(im.MSISDN)
 	if err != nil {

@@ -6,7 +6,6 @@ import (
 	"euromoby.com/smsgw/internal/db"
 	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/models"
-	"euromoby.com/smsgw/internal/utils"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -70,7 +69,7 @@ func (r *OutboundMessageRepo) Update(om *models.OutboundMessage) error {
 	updated_at = $7
 	where id = $8`
 
-	om.UpdatedAt = utils.Now()
+	om.UpdatedAt = models.TimeNow()
 
 	_, err := r.db.Exec(ctx, stmt,
 		om.Status,
@@ -126,7 +125,7 @@ func (r *OutboundMessageRepo) FindOneForProcessing() (*models.OutboundMessage, e
 	for update skip locked
  	limit 1
 	`
-	return r.querySingle(stmt, models.OutboundMessageStatusNew, utils.Now())
+	return r.querySingle(stmt, models.OutboundMessageStatusNew, models.TimeNow())
 }
 
 func (r *OutboundMessageRepo) query(stmt string, args ...interface{}) ([]*models.OutboundMessage, error) {

@@ -9,7 +9,6 @@ import (
 	"euromoby.com/smsgw/internal/models"
 	"euromoby.com/smsgw/internal/notifiers"
 	"euromoby.com/smsgw/internal/repos"
-	"euromoby.com/smsgw/internal/utils"
 )
 
 type OutboundDeliveryWorker struct {
@@ -123,7 +122,7 @@ func (w *OutboundDeliveryWorker) tryReschedule(n *models.DeliveryNotification) {
 		return
 	}
 
-	n.NextAttemptAt = utils.CalculateNextAttemptTime(n.AttemptCounter)
+	n.NextAttemptAt = models.CalculateNextAttemptTime(n.AttemptCounter)
 	n.AttemptCounter++
 	logger.Infow("sending attempt failed, will try again later",
 		"worker", w.Name(),

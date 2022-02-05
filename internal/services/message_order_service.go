@@ -5,7 +5,6 @@ import (
 	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/models"
 	"euromoby.com/smsgw/internal/repos"
-	"euromoby.com/smsgw/internal/utils"
 	"euromoby.com/smsgw/internal/views"
 )
 
@@ -110,7 +109,7 @@ func (s *MessageOrderService) SendMessage(params *inputs.SendMessageParams) (*vi
 }
 
 func (s *MessageOrderService) makeMessageOrder(p *inputs.SendMessageParams) *models.MessageOrder {
-	now := utils.Now()
+	now := models.TimeNow()
 	return &models.MessageOrder{
 		MerchantID:          p.MerchantID,
 		Sender:              p.Sender,

@@ -2,8 +2,6 @@ package models
 
 import (
 	"time"
-
-	"euromoby.com/smsgw/internal/utils"
 )
 
 type (
@@ -35,7 +33,7 @@ type DeliveryNotification struct {
 }
 
 func MakeInboundDeliveryNotification(message *InboundMessage) *DeliveryNotification {
-	now := utils.Now()
+	now := TimeNow()
 	return &DeliveryNotification{
 		MessageType:    MessageTypeInbound,
 		MessageID:      message.ID,
@@ -48,7 +46,7 @@ func MakeInboundDeliveryNotification(message *InboundMessage) *DeliveryNotificat
 }
 
 func MakeOutboundDeliveryNotification(message *OutboundMessage) *DeliveryNotification {
-	now := utils.Now()
+	now := TimeNow()
 	return &DeliveryNotification{
 		MessageType:    MessageTypeOutbound,
 		MessageID:      message.ID,

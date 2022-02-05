@@ -3,7 +3,6 @@ package repos
 import (
 	"euromoby.com/smsgw/internal/db"
 	"euromoby.com/smsgw/internal/models"
-	"euromoby.com/smsgw/internal/utils"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -68,7 +67,7 @@ func (r *DeliveryNotificationRepo) Update(om *models.DeliveryNotification) error
 	updated_at = $5
 	where id = $6`
 
-	om.UpdatedAt = utils.Now()
+	om.UpdatedAt = models.TimeNow()
 
 	_, err := r.db.Exec(ctx, stmt,
 		om.Status,
@@ -90,7 +89,7 @@ func (r *DeliveryNotificationRepo) FindOneForProcessing(messageType models.Messa
 	for update skip locked
  	limit 1
 	`
-	return r.querySingle(stmt, messageType, models.OutboundMessageStatusNew, utils.Now())
+	return r.querySingle(stmt, messageType, models.OutboundMessageStatusNew, models.TimeNow())
 }
 
 func (r *DeliveryNotificationRepo) querySingle(stmt string, args ...interface{}) (*models.DeliveryNotification, error) {

@@ -9,7 +9,6 @@ import (
 	"euromoby.com/smsgw/internal/models"
 	"euromoby.com/smsgw/internal/providers/connectors"
 	"euromoby.com/smsgw/internal/repos"
-	"euromoby.com/smsgw/internal/utils"
 )
 
 const (
@@ -132,7 +131,7 @@ func (w *OutboundMessageWorker) tryReschedule(message *models.OutboundMessage) {
 		return
 	}
 
-	message.NextAttemptAt = utils.CalculateNextAttemptTime(message.AttemptCounter)
+	message.NextAttemptAt = models.CalculateNextAttemptTime(message.AttemptCounter)
 	message.AttemptCounter++
 	logger.Infow("sending attempt failed, will try again later",
 		"worker", w.Name(),

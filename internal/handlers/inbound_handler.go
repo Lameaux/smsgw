@@ -7,7 +7,7 @@ import (
 	"euromoby.com/smsgw/internal/middlewares"
 	"euromoby.com/smsgw/internal/models"
 	"euromoby.com/smsgw/internal/services"
-	"euromoby.com/smsgw/internal/utils"
+	"euromoby.com/smsgw/internal/views"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,18 +24,18 @@ func (h *InboundHandler) Get(c *gin.Context) {
 
 	err := h.service.ValidateShortcode(p.MerchantID, p.Shortcode)
 	if err != nil {
-		utils.ErrorJSON(c, http.StatusForbidden, err)
+		views.ErrorJSON(c, http.StatusForbidden, err)
 		return
 	}
 
 	message, err := h.service.FindByShortcodeAndID(p.Shortcode, p.ID)
 	if err != nil {
-		utils.ErrorJSON(c, http.StatusInternalServerError, err)
+		views.ErrorJSON(c, http.StatusInternalServerError, err)
 		return
 	}
 
 	if message == nil {
-		utils.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
+		views.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
 		return
 	}
 
@@ -47,7 +47,7 @@ func (h *InboundHandler) Ack(c *gin.Context) {
 
 	err := h.service.ValidateShortcode(p.MerchantID, p.Shortcode)
 	if err != nil {
-		utils.ErrorJSON(c, http.StatusForbidden, err)
+		views.ErrorJSON(c, http.StatusForbidden, err)
 		return
 	}
 
@@ -57,13 +57,13 @@ func (h *InboundHandler) Ack(c *gin.Context) {
 		case models.ErrAlreadyAcked:
 			c.JSON(http.StatusConflict, m)
 		default:
-			utils.ErrorJSON(c, http.StatusInternalServerError, err)
+			views.ErrorJSON(c, http.StatusInternalServerError, err)
 		}
 		return
 	}
 
 	if m == nil {
-		utils.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
+		views.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
 		return
 	}
 
@@ -73,19 +73,19 @@ func (h *InboundHandler) Ack(c *gin.Context) {
 func (h *InboundHandler) Search(c *gin.Context) {
 	p, err := h.searchParams(c)
 	if err != nil {
-		utils.ErrorJSON(c, http.StatusBadRequest, err)
+		views.ErrorJSON(c, http.StatusBadRequest, err)
 		return
 	}
 
 	err = h.service.ValidateShortcode(p.MerchantID, p.Shortcode)
 	if err != nil {
-		utils.ErrorJSON(c, http.StatusForbidden, err)
+		views.ErrorJSON(c, http.StatusForbidden, err)
 		return
 	}
 
 	messages, err := h.service.FindByQuery(p)
 	if err != nil {
-		utils.ErrorJSON(c, http.StatusInternalServerError, err)
+		views.ErrorJSON(c, http.StatusInternalServerError, err)
 		return
 	}
 
