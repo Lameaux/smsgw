@@ -20,7 +20,7 @@ type OutboundMessage struct {
 	MerchantID        string                `json:"-"`
 	MessageOrderID    string                `json:"message_order_id"`
 	Status            OutboundMessageStatus `json:"status"`
-	MSISDN            string                `json:"msisdn"`
+	MSISDN            MSISDN                `json:"msisdn"`
 	ProviderID        *string               `json:"-"`
 	ProviderMessageID *string               `json:"-"`
 	ProviderResponse  *string               `json:"-"`
@@ -30,7 +30,7 @@ type OutboundMessage struct {
 	UpdatedAt         time.Time             `json:"updated_at"`
 }
 
-func NewOutboundMessage(merchantID string, messageOrderID string, msisdn string) *OutboundMessage {
+func NewOutboundMessage(merchantID string, messageOrderID string, msisdn MSISDN) *OutboundMessage {
 	now := utils.Now()
 	return &OutboundMessage{
 		MerchantID:     merchantID,

@@ -3,6 +3,7 @@ package connectors
 import (
 	"encoding/json"
 	"io"
+	"strconv"
 	"strings"
 
 	"euromoby.com/smsgw/internal/config"
@@ -42,8 +43,10 @@ func (c *SandboxConnector) Name() string {
 }
 
 func (c *SandboxConnector) Accept(message *SendMessageRequest) bool {
+	recipient := strconv.FormatInt(int64(message.MSISDN), 10)
+
 	for _, countryCode := range c.countryCodes {
-		if strings.HasPrefix(message.MSISDN, countryCode) {
+		if strings.HasPrefix(recipient, countryCode) {
 			return true
 		}
 	}
@@ -52,7 +55,7 @@ func (c *SandboxConnector) Accept(message *SendMessageRequest) bool {
 
 func (c *SandboxConnector) SendMessage(message *SendMessageRequest) (*SendMessageResponse, error) {
 	reqBody := SandboxMessageRequest{
-		MSISDN:              message.MSISDN,
+		MSISDN:              strconv.FormatInt(int64(message.MSISDN), 10),
 		Body:                message.Body,
 		Sender:              message.Sender,
 		ClientTransactionID: message.ClientTransactionID,

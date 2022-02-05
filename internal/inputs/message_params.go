@@ -1,6 +1,8 @@
 package inputs
 
+import "euromoby.com/smsgw/internal/models"
+
 type MessageParams struct {
-	MSISDN *string
+	MSISDN *models.MSISDN
 	Status *string
 }

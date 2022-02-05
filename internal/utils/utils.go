@@ -1,10 +1,8 @@
 package utils
 
 import (
-	"errors"
 	"math"
 	"os"
-	"regexp"
 	"time"
 
 	"euromoby.com/smsgw/internal/logger"
@@ -15,11 +13,6 @@ import (
 type ErrorResponse struct {
 	Error string `json:"error"`
 }
-
-var (
-	msisdnRegex      = regexp.MustCompile(`^(\+|00)?([1-9]\d{7,14})$`)
-	ErrInvalidMSISDN = errors.New("invalid msisdn format")
-)
 
 func ErrorJSON(c *gin.Context, code int, err error) {
 	logger.Errorw("unhandled error", "error", err)
@@ -45,15 +38,6 @@ func NewUUID() string {
 
 func Now() time.Time {
 	return time.Now().UTC().Truncate(time.Millisecond)
-}
-
-func NormalizeMSISDN(msisdn string) (string, error) {
-	match := msisdnRegex.FindStringSubmatch(msisdn)
-	if match == nil {
-		return "", ErrInvalidMSISDN
-	}
-
-	return match[2], nil
 }
 
 func CalculateNextAttemptTime(counter int) time.Time {

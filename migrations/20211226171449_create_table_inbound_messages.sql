@@ -4,7 +4,7 @@ CREATE TABLE "inbound_messages" (
     "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     "shortcode" varchar(15) NOT NULL,
     "status" char(1) NOT NULL,
-    "msisdn" varchar(15) NOT NULL,
+    "msisdn" bigint NOT NULL,
     "body" text  NOT NULL,
     "provider_id" varchar(36) NOT NULL,
     "provider_message_id" varchar(255) NOT NULL,

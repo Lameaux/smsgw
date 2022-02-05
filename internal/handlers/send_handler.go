@@ -58,25 +58,25 @@ func (h *SendHandler) parseRequest(c *gin.Context) (*inputs.SendMessageParams, e
 	if err != nil {
 		return nil, err
 	}
-	p.To = recipients
+	p.Recipients = recipients
 
 	// TODO: validate more inputs
 
 	return &p, nil
 }
 
-func (h *SendHandler) normalizeRecipients(input []string) ([]string, error) {
-	m := make(map[string]bool)
+func (h *SendHandler) normalizeRecipients(input []string) ([]models.MSISDN, error) {
+	m := make(map[models.MSISDN]struct{})
 
 	for _, msisdn := range input {
-		msisdn, err := utils.NormalizeMSISDN(msisdn)
+		normalized, err := models.NormalizeMSISDN(msisdn)
 		if err != nil {
 			return nil, err
 		}
-		m[msisdn] = true
+		m[normalized] = struct{}{}
 	}
 
-	output := make([]string, 0, len(m))
+	output := make([]models.MSISDN, 0, len(m))
 	for msisdn := range m {
 		output = append(output, msisdn)
 	}

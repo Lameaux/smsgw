@@ -3,10 +3,11 @@ package connectors
 import (
 	"euromoby.com/smsgw/internal/config"
 	"euromoby.com/smsgw/internal/logger"
+	"euromoby.com/smsgw/internal/models"
 )
 
 type SendMessageRequest struct {
-	MSISDN              string
+	MSISDN              models.MSISDN
 	Sender              string
 	Body                string
 	ClientTransactionID string
@@ -19,7 +20,7 @@ type SendMessageResponse struct {
 
 type SendStatusRequest struct {
 	MessageID           string
-	MSISDN              string
+	MSISDN              models.MSISDN
 	Status              string
 	ClientTransactionID string
 }

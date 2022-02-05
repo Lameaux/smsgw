@@ -19,13 +19,17 @@ func NewInboundHandler(service *services.InboundService) *InboundHandler {
 }
 
 func (h *InboundHandler) ReceiveMessage(c *gin.Context) {
-	mreq, err := h.parseRequest(c.Request)
+	p, err := h.parseRequest(c.Request)
 	if err != nil {
 		utils.ErrorJSON(c, http.StatusBadRequest, err)
 		return
 	}
 
-	m := h.makeInboundMessage(mreq)
+	m, err := h.makeInboundMessage(p)
+	if err != nil {
+		utils.ErrorJSON(c, http.StatusBadRequest, err)
+		return
+	}
 
 	err = h.service.SaveMessage(m)
 	if err != nil {
@@ -52,27 +56,29 @@ func (h *InboundHandler) parseRequest(r *http.Request) (*InboundMessage, error) 
 		return nil, err
 	}
 
-	msisdn, err := utils.NormalizeMSISDN(p.MSISDN)
-	if err != nil {
-		return nil, err
-	}
-	p.MSISDN = msisdn
-
 	return &p, nil
 }
 
-func (h *InboundHandler) makeInboundMessage(mreq *InboundMessage) *models.InboundMessage {
+func (h *InboundHandler) makeInboundMessage(im *InboundMessage) (*models.InboundMessage, error) {
 	now := utils.Now()
-	return &models.InboundMessage{
-		Shortcode:         mreq.Shortcode,
-		MSISDN:            mreq.MSISDN,
-		Body:              mreq.Body,
+
+	normalized, err := models.NormalizeMSISDN(im.MSISDN)
+	if err != nil {
+		return nil, err
+	}
+
+	m := models.InboundMessage{
+		Shortcode:         im.Shortcode,
+		MSISDN:            normalized,
+		Body:              im.Body,
 		ProviderID:        SandboxProviderID,
-		ProviderMessageID: mreq.MessageID,
+		ProviderMessageID: im.MessageID,
 		Status:            models.InboundMessageStatusNew,
 		NextAttemptAt:     now,
 		AttemptCounter:    0,
 		CreatedAt:         now,
 		UpdatedAt:         now,
 	}
+
+	return &m, nil
 }

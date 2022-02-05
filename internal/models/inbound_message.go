@@ -15,7 +15,7 @@ type InboundMessage struct {
 	ID                string               `json:"id"`
 	Shortcode         string               `json:"shortcode"`
 	Status            InboundMessageStatus `json:"status"`
-	MSISDN            string               `json:"msisdn"`
+	MSISDN            MSISDN               `json:"msisdn"`
 	Body              string               `json:"body"`
 	ProviderID        string               `json:"-"`
 	ProviderMessageID string               `json:"-"`

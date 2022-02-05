@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"euromoby.com/smsgw/internal/inputs"
-	"euromoby.com/smsgw/internal/utils"
+	"euromoby.com/smsgw/internal/models"
 	"github.com/gin-gonic/gin"
 )
 
@@ -77,12 +77,12 @@ func messageSearchParams(c *gin.Context) (*inputs.MessageParams, error) {
 
 	msisdn := c.Query("msisdn")
 	if msisdn != "" {
-		msisdn, err := utils.NormalizeMSISDN(msisdn)
+		normalized, err := models.NormalizeMSISDN(msisdn)
 		if err != nil {
 			return nil, err
 		}
 
-		p.MSISDN = &msisdn
+		p.MSISDN = &normalized
 	}
 
 	status := c.Query("status")

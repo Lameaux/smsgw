@@ -12,7 +12,7 @@ import (
 func TestOutboundMessageRepo_Save(t *testing.T) {
 	r := NewOutboundMessageRepo(TestAppConfig.DBPool)
 
-	om := models.NewOutboundMessage(utils.NewUUID(), utils.NewUUID(), "420123456789")
+	om := models.NewOutboundMessage(utils.NewUUID(), utils.NewUUID(), 420123456789)
 	err := r.Save(om)
 	require.NoError(t, err, "Saving OutboundMessage failed")
 
@@ -28,7 +28,7 @@ func TestOutboundMessageRepo_FindByMerchantAndID(t *testing.T) {
 	assert.Nil(t, found, "wrong OutboundMessage found")
 
 	merchantID := utils.NewUUID()
-	om := models.NewOutboundMessage(merchantID, utils.NewUUID(), "420123456789")
+	om := models.NewOutboundMessage(merchantID, utils.NewUUID(), 420123456789)
 	err = r.Save(om)
 	require.NoError(t, err, "Saving OutboundMessage failed")
 
@@ -48,7 +48,7 @@ func TestOutboundMessageRepo_FindByMerchantAndOrderID(t *testing.T) {
 
 	merchantID := utils.NewUUID()
 	messageOrderID := utils.NewUUID()
-	om := models.NewOutboundMessage(merchantID, messageOrderID, "420123456789")
+	om := models.NewOutboundMessage(merchantID, messageOrderID, 420123456789)
 	err = r.Save(om)
 	require.NoError(t, err, "Saving OutboundMessage failed")
 

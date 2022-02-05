@@ -5,7 +5,7 @@ CREATE TABLE "outbound_messages" (
     "merchant_id" uuid NOT NULL,
     "message_order_id" uuid NOT NULL,
     "status" char(1) NOT NULL,
-    "msisdn" varchar(15) NOT NULL,
+    "msisdn" bigint NOT NULL,
     "provider_id" varchar(36),
     "provider_message_id" varchar(255),
     "provider_response" text,

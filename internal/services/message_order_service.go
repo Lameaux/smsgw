@@ -86,9 +86,9 @@ func (s *MessageOrderService) SendMessage(params *inputs.SendMessageParams) (*vi
 		return nil, err
 	}
 
-	messages := make([]*models.OutboundMessage, 0, len(params.To))
+	messages := make([]*models.OutboundMessage, 0, len(params.Recipients))
 
-	for _, msisdn := range params.To {
+	for _, msisdn := range params.Recipients {
 		outboundMessage := models.NewOutboundMessage(params.MerchantID, order.ID, msisdn)
 		messages = append(messages, outboundMessage)
 	}
