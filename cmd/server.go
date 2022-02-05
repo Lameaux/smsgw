@@ -10,8 +10,10 @@ import (
 	"euromoby.com/smsgw/internal/routes"
 )
 
-func startAPIServer(app *config.AppConfig) *http.Server {
-	srv := &http.Server{
+var srv *http.Server
+
+func startAPIServer(app *config.AppConfig) {
+	srv = &http.Server{
 		Addr:    ":" + app.Port,
 		Handler: routes.Gin(app),
 	}
@@ -25,11 +27,9 @@ func startAPIServer(app *config.AppConfig) *http.Server {
 			logger.Fatal("listen: %s\n", err)
 		}
 	}()
-
-	return srv
 }
 
-func shutdownAPIServer(srv *http.Server) {
+func shutdownAPIServer() {
 	logger.Infow("shutting down API server")
 
 	// The context is used to inform the server it has 5 seconds to finish

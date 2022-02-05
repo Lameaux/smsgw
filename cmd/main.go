@@ -15,18 +15,16 @@ func main() {
 	defer stop()
 
 	app := config.NewAppConfig()
-	srv := startAPIServer(app)
-	g, workersStop := startWorkers(app)
+	startAPIServer(app)
+	startWorkers(app)
 
 	// Listen for the interrupt signal.
 	<-ctx.Done()
 	logger.Infow("the interrupt received, shutting down gracefully, press Ctrl+C again to force")
-
-	// Restore default behavior on the interrupt signal and notify user of shutdown.
 	stop()
 
-	shutdownAPIServer(srv)
-	shutdownWorkers(g, workersStop)
+	shutdownAPIServer()
+	shutdownWorkers()
 	app.Shutdown()
 
 	logger.Infow("bye")

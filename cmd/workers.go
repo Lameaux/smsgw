@@ -11,38 +11,39 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func startWorkers(app *config.AppConfig) (*errgroup.Group, context.CancelFunc) {
+var (
+	workersGroup  errgroup.Group
+	cancelWorkers context.CancelFunc
+)
+
+func startWorkers(app *config.AppConfig) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancelWorkers = cancel
+
+	runners := make([]*workers.Runner, 0)
+
 	c := connectors.NewConnectorRepository(app)
 	ow := workers.NewOutboundMessageWorker(app, c)
+	runners = append(runners, workers.NewRunner(ctx, ow))
 
 	n := notifiers.NewOutboundNotifier(app)
 	on := workers.NewOutboundDeliveryWorker(app, n)
-
-	ctx, cancel := context.WithCancel(context.Background())
-
-	runners := []*workers.Runner{
-		workers.NewRunner(ctx, ow),
-		workers.NewRunner(ctx, on),
-	}
-
-	var g errgroup.Group
+	runners = append(runners, workers.NewRunner(ctx, on))
 
 	for _, r := range runners {
 		r := r
-		g.Go(func() error {
+		workersGroup.Go(func() error {
 			return r.Exec()
 		})
 	}
-
-	return &g, cancel
 }
 
-func shutdownWorkers(g *errgroup.Group, cancel context.CancelFunc) {
+func shutdownWorkers() {
 	logger.Infow("shutting down workers")
 
-	cancel()
+	cancelWorkers()
 
-	if err := g.Wait(); err != nil {
+	if err := workersGroup.Wait(); err != nil {
 		logger.Errorw("error while stopping workers", "error", err)
 	}
 	logger.Infow("workers stopped")
