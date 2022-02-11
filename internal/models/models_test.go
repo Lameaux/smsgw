@@ -8,9 +8,8 @@ import (
 func Test_CalculateNextAttemptTime(t *testing.T) {
 	now := TimeNow()
 	next := CalculateNextAttemptTime(0)
-	diff := next.Sub(now)
 
-	if diff < 30*time.Second {
+	if diff := next.Sub(now); diff < 30*time.Second {
 		t.Errorf("Invalid interval. Expected: 30. Got %v", diff)
 	}
 }

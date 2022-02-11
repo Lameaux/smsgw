@@ -1,6 +1,7 @@
 package workers
 
 import (
+	"errors"
 	"time"
 
 	"euromoby.com/smsgw/internal/config"
@@ -9,6 +10,10 @@ import (
 	"euromoby.com/smsgw/internal/models"
 	"euromoby.com/smsgw/internal/notifiers"
 	"euromoby.com/smsgw/internal/repos"
+)
+
+const (
+	outboundDeliveryMaxAttempts = 5
 )
 
 type OutboundDeliveryWorker struct {
@@ -31,9 +36,11 @@ func (w *OutboundDeliveryWorker) Run() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
 	defer tx.Rollback(ctx)
 
 	notificationRepo := repos.NewDeliveryNotificationRepo(tx)
+
 	notification, err := notificationRepo.FindOneForProcessing(models.MessageTypeOutbound)
 	if err != nil {
 		return false, err
@@ -52,6 +59,7 @@ func (w *OutboundDeliveryWorker) Run() (bool, error) {
 
 	if message == nil {
 		logger.Errorw("message not found", "worker", w.Name(), "sms", message)
+
 		notification.Status = models.DeliveryNotificationStatusFailed
 	} else {
 		w.sendToMerchant(notification, messageOrder, message)
@@ -62,7 +70,7 @@ func (w *OutboundDeliveryWorker) Run() (bool, error) {
 	}
 
 	if err = tx.Commit(ctx); err != nil {
-		return false, nil
+		return false, err
 	}
 
 	return true, nil
@@ -70,13 +78,10 @@ func (w *OutboundDeliveryWorker) Run() (bool, error) {
 
 func (w *OutboundDeliveryWorker) findMessageWithOrder(tx db.Conn, id string) (*models.OutboundMessage, *models.MessageOrder, error) {
 	outboundMessageRepo := repos.NewOutboundMessageRepo(tx)
+
 	message, err := outboundMessageRepo.FindByID(id)
 	if err != nil {
 		return nil, nil, err
-	}
-
-	if message == nil {
-		return nil, nil, nil
 	}
 
 	messageOrderRepo := repos.NewMessageOrderRepo(tx)
@@ -84,10 +89,6 @@ func (w *OutboundDeliveryWorker) findMessageWithOrder(tx db.Conn, id string) (*m
 	messageOrder, err := messageOrderRepo.FindByID(message.MessageOrderID)
 	if err != nil {
 		return nil, nil, err
-	}
-
-	if messageOrder == nil {
-		return nil, nil, nil
 	}
 
 	return message, messageOrder, nil
@@ -104,10 +105,9 @@ func (w *OutboundDeliveryWorker) sendToMerchant(n *models.DeliveryNotification, 
 }
 
 func (w *OutboundDeliveryWorker) handleFailure(n *models.DeliveryNotification, resp *notifiers.SendNotificationResponse, err error) {
-	switch err {
-	case models.ErrSendFailed, models.ErrInvalidJSON:
+	if errors.Is(err, models.ErrSendFailed) || errors.Is(err, models.ErrInvalidJSON) {
 		n.LastResponse = resp.Body
-	default:
+	} else {
 		errorText := err.Error()
 		n.LastResponse = &errorText
 	}
@@ -118,7 +118,9 @@ func (w *OutboundDeliveryWorker) handleFailure(n *models.DeliveryNotification, r
 func (w *OutboundDeliveryWorker) tryReschedule(n *models.DeliveryNotification) {
 	if n.AttemptCounter >= w.MaxAttempts() {
 		n.Status = models.DeliveryNotificationStatusFailed
+
 		logger.Errorw("sending failed", "worker", w.Name(), "delivery", n)
+
 		return
 	}
 
@@ -144,7 +146,7 @@ func (w *OutboundDeliveryWorker) Name() string {
 }
 
 func (w *OutboundDeliveryWorker) MaxAttempts() int {
-	return 5
+	return outboundDeliveryMaxAttempts
 }
 
 func (w *OutboundDeliveryWorker) SleepTime() time.Duration {

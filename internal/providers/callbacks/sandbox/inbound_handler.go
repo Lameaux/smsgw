@@ -2,12 +2,14 @@ package sandbox
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 
 	"euromoby.com/smsgw/internal/models"
 	"euromoby.com/smsgw/internal/services"
 	"euromoby.com/smsgw/internal/views"
-	"github.com/gin-gonic/gin"
 )
 
 type InboundHandler struct {
@@ -22,19 +24,21 @@ func (h *InboundHandler) ReceiveMessage(c *gin.Context) {
 	p, err := h.parseRequest(c.Request)
 	if err != nil {
 		views.ErrorJSON(c, http.StatusBadRequest, err)
+
 		return
 	}
 
 	m, err := h.makeInboundMessage(p)
 	if err != nil {
 		views.ErrorJSON(c, http.StatusBadRequest, err)
+
 		return
 	}
 
 	err = h.service.SaveMessage(m)
 	if err != nil {
-		switch err {
-		case models.ErrDuplicateProviderMessageID:
+		switch {
+		case errors.Is(err, models.ErrDuplicateProviderMessageID):
 			c.JSON(http.StatusConflict, m)
 		default:
 			views.ErrorJSON(c, http.StatusInternalServerError, err)
@@ -48,11 +52,12 @@ func (h *InboundHandler) ReceiveMessage(c *gin.Context) {
 
 func (h *InboundHandler) parseRequest(r *http.Request) (*InboundMessage, error) {
 	var p InboundMessage
+
 	dec := json.NewDecoder(r.Body)
+
 	dec.DisallowUnknownFields()
 
-	err := dec.Decode(&p)
-	if err != nil {
+	if err := dec.Decode(&p); err != nil {
 		return nil, err
 	}
 

@@ -49,12 +49,13 @@ func NewConnectorRepository(app *config.AppConfig) *ConnectorRepository {
 	return &ConnectorRepository{connectors}
 }
 
-func (r *ConnectorRepository) FindConnectorByName(name string) (Connector, bool) {
+func (r *ConnectorRepository) FindConnectorByName(name string) (Connector, bool) { //nolint:ireturn
 	connector, found := r.connectors[name]
+
 	return connector, found
 }
 
-func (r *ConnectorRepository) FindConnector(message *SendMessageRequest) Connector {
+func (r *ConnectorRepository) FindConnector(message *SendMessageRequest) Connector { //nolint:ireturn
 	for _, connector := range r.connectors {
 		if connector.Accept(message) {
 			return connector
@@ -62,5 +63,6 @@ func (r *ConnectorRepository) FindConnector(message *SendMessageRequest) Connect
 	}
 
 	logger.Infow("no connector found for the message", "sms", message)
+
 	return &DeadLetterConnector{}
 }

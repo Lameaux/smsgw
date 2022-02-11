@@ -3,8 +3,9 @@ package handlers
 import (
 	"net/http"
 
-	"euromoby.com/smsgw/internal/config"
 	"github.com/gin-gonic/gin"
+
+	"euromoby.com/smsgw/internal/config"
 )
 
 type CallbackHandler struct {

@@ -3,7 +3,7 @@ package connectors
 import (
 	"encoding/json"
 	"io"
-	"strconv"
+	"net/http"
 	"strings"
 
 	"euromoby.com/smsgw/internal/config"
@@ -43,19 +43,20 @@ func (c *SandboxConnector) Name() string {
 }
 
 func (c *SandboxConnector) Accept(message *SendMessageRequest) bool {
-	recipient := strconv.FormatInt(int64(message.MSISDN), 10)
+	recipient := message.MSISDN.String()
 
 	for _, countryCode := range c.countryCodes {
 		if strings.HasPrefix(recipient, countryCode) {
 			return true
 		}
 	}
+
 	return false
 }
 
 func (c *SandboxConnector) SendMessage(message *SendMessageRequest) (*SendMessageResponse, error) {
 	reqBody := SandboxMessageRequest{
-		MSISDN:              strconv.FormatInt(int64(message.MSISDN), 10),
+		MSISDN:              message.MSISDN.String(),
 		Body:                message.Body,
 		Sender:              message.Sender,
 		ClientTransactionID: message.ClientTransactionID,
@@ -77,19 +78,20 @@ func (c *SandboxConnector) SendMessage(message *SendMessageRequest) (*SendMessag
 		Body: &respBody,
 	}
 
-	if httpResp.StatusCode != 201 {
+	if httpResp.StatusCode != http.StatusCreated {
 		return &r, models.ErrSendFailed
 	}
 
 	var resp SandboxMessageResponse
-	err = json.Unmarshal(respBodyBytes, &resp)
-	if err != nil {
+
+	if err = json.Unmarshal(respBodyBytes, &resp); err != nil {
 		return &r, models.ErrInvalidJSON
 	}
 
 	r.MessageID = resp.MessageID
 
 	logger.Infow("message sent via SandboxConnector", "sms", message)
+
 	return &r, nil
 }
 

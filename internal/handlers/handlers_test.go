@@ -4,8 +4,9 @@ import (
 	"io"
 	"net/http/httptest"
 
-	"euromoby.com/smsgw/internal/middlewares"
 	"github.com/gin-gonic/gin"
+
+	"euromoby.com/smsgw/internal/middlewares"
 )
 
 type header struct {
@@ -29,11 +30,15 @@ func performAuthRequest(f gin.HandlerFunc, method, path string, body io.Reader, 
 
 func performRequest(r *gin.Engine, method, path string, body io.Reader, headers ...header) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(method, path, body)
+
 	for _, h := range headers {
 		req.Header.Add(h.Key, h.Value)
 	}
+
 	w := httptest.NewRecorder()
+
 	r.ServeHTTP(w, req)
+
 	return w
 }
 
@@ -41,5 +46,6 @@ func authRouter() *gin.Engine {
 	router := gin.Default()
 	a := middlewares.NewAuthenticator(TestAppConfig)
 	router.Use(a.Authenticate)
+
 	return router
 }

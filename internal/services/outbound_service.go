@@ -24,6 +24,7 @@ func (s *OutboundService) FindByMerchantAndID(merchantID, id string) (*views.Out
 	if err != nil {
 		return nil, err
 	}
+
 	defer conn.Release()
 
 	outboundMessageRepo := repos.NewOutboundMessageRepo(conn)
@@ -33,18 +34,11 @@ func (s *OutboundService) FindByMerchantAndID(merchantID, id string) (*views.Out
 		return nil, err
 	}
 
-	if message == nil {
-		return nil, nil
-	}
-
 	messageOrderRepo := repos.NewMessageOrderRepo(conn)
+
 	messageOrder, err := messageOrderRepo.FindByID(message.MessageOrderID)
 	if err != nil {
 		return nil, err
-	}
-
-	if messageOrder == nil {
-		return nil, nil
 	}
 
 	return views.NewOutboundMessageDetail(message, messageOrder), nil
@@ -58,26 +52,21 @@ func (s *OutboundService) AckByProviderAndMessageID(providerID, messageID string
 	if err != nil {
 		return nil, err
 	}
+
 	defer tx.Rollback(ctx)
 
 	outboundMessageRepo := repos.NewOutboundMessageRepo(tx)
+
 	message, err := outboundMessageRepo.FindByProviderAndMessageID(providerID, messageID)
 	if err != nil {
 		return nil, err
 	}
 
-	if message == nil {
-		return nil, nil
-	}
-
 	messageOrderRepo := repos.NewMessageOrderRepo(tx)
+
 	messageOrder, err := messageOrderRepo.FindByID(message.MessageOrderID)
 	if err != nil {
 		return nil, err
-	}
-
-	if messageOrder == nil {
-		return nil, nil
 	}
 
 	if message.Status == models.OutboundMessageStatusDelivered {
@@ -85,6 +74,7 @@ func (s *OutboundService) AckByProviderAndMessageID(providerID, messageID string
 	}
 
 	message.Status = models.OutboundMessageStatusDelivered
+
 	err = outboundMessageRepo.Update(message)
 	if err != nil {
 		return nil, err
@@ -93,6 +83,7 @@ func (s *OutboundService) AckByProviderAndMessageID(providerID, messageID string
 	if messageOrder.NotificationURL != nil {
 		notificationRepo := repos.NewDeliveryNotificationRepo(tx)
 		n := models.MakeOutboundDeliveryNotification(message)
+
 		err = notificationRepo.Save(n)
 		if err != nil {
 			return nil, err
@@ -114,6 +105,7 @@ func (s *OutboundService) FindByQuery(p *inputs.OutboundMessageSearchParams) ([]
 	if err != nil {
 		return nil, err
 	}
+
 	defer conn.Release()
 
 	outboundMessageRepo := repos.NewOutboundMessageRepo(conn)

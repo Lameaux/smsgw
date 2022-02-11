@@ -18,6 +18,7 @@ type MessageOrder struct {
 func NewSimpleMessageOrder(merchantID string, body string) *MessageOrder {
 	generatedTransactionID := NewUUID()
 	now := TimeNow()
+
 	return &MessageOrder{
 		MerchantID:          merchantID,
 		Body:                body,

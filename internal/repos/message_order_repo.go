@@ -1,13 +1,15 @@
 package repos
 
 import (
+	"errors"
 	"fmt"
+
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgx/v4"
 
 	"euromoby.com/smsgw/internal/db"
 	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/models"
-	"github.com/jackc/pgconn"
-	"github.com/jackc/pgx/v4"
 )
 
 type MessageOrderRepo struct {
@@ -37,8 +39,10 @@ func (r *MessageOrderRepo) Save(mo *models.MessageOrder) error {
 	) values ($1, $2, $3, $4, $5, $6, $7)
 	returning id
 	`
+
 	ctx, cancel := DBQueryContext()
 	defer cancel()
+
 	err := r.db.QueryRow(ctx, stmt,
 		mo.MerchantID,
 		mo.Sender,
@@ -59,11 +63,13 @@ func (r *MessageOrderRepo) Save(mo *models.MessageOrder) error {
 
 func (r *MessageOrderRepo) FindByID(id string) (*models.MessageOrder, error) {
 	stmt := selectMessageOrdersBase + "where id = $1"
+
 	return r.querySingle(stmt, id)
 }
 
 func (r *MessageOrderRepo) FindByMerchantAndID(merchantID, id string) (*models.MessageOrder, error) {
 	stmt := selectMessageOrdersBase + "where merchant_id = $1 AND id = $2"
+
 	return r.querySingle(stmt, merchantID, id)
 }
 
@@ -89,18 +95,22 @@ func (r *MessageOrderRepo) query(stmt string, args ...interface{}) ([]*models.Me
 
 	ctx, cancel := DBQueryContext()
 	defer cancel()
+
 	rows, err := r.db.Query(ctx, stmt, args...)
 	if err != nil {
 		return nil, err
 	}
+
 	defer rows.Close()
 
 	for rows.Next() {
 		var mo models.MessageOrder
+
 		err = r.scanMessageOrder(rows, &mo)
 		if err != nil {
 			return nil, err
 		}
+
 		orders = append(orders, &mo)
 	}
 
@@ -110,13 +120,17 @@ func (r *MessageOrderRepo) query(stmt string, args ...interface{}) ([]*models.Me
 func (r *MessageOrderRepo) querySingle(stmt string, args ...interface{}) (*models.MessageOrder, error) {
 	ctx, cancel := DBQueryContext()
 	defer cancel()
+
 	row := r.db.QueryRow(ctx, stmt, args...)
 
 	var mo models.MessageOrder
-	switch err := r.scanMessageOrder(row, &mo); err {
-	case pgx.ErrNoRows:
-		return nil, nil
-	case nil:
+
+	err := r.scanMessageOrder(row, &mo)
+
+	switch {
+	case errors.Is(err, pgx.ErrNoRows):
+		return nil, models.ErrNotFound
+	case err == nil:
 		return &mo, nil
 	default:
 		return nil, err
@@ -137,7 +151,8 @@ func (r *MessageOrderRepo) scanMessageOrder(row pgx.Row, mo *models.MessageOrder
 }
 
 func (r *MessageOrderRepo) wrapError(err error) error {
-	if pgerr, ok := err.(*pgconn.PgError); ok {
+	var pgerr *pgconn.PgError
+	if errors.As(err, &pgerr) {
 		if pgerr.ConstraintName == constraintNameClientTransactionID {
 			return models.ErrDuplicateProviderMessageID
 		}

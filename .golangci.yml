@@ -1,32 +1,13 @@
 linters-settings:
+  goimports:
+    local-prefixes: euromoby.com/smsgw
+
   golint:
     min-confidence: 0
 
   misspell:
     locale: US
 
-linters:
-  disable-all: true
-  enable:
-    - typecheck
-    - goimports
-    - misspell
-    - govet
-    - revive
-    - ineffassign
-    - gosimple
-    - deadcode
-    - structcheck
-    - gomodguard
-    - gofmt
-    - unused
-    - structcheck
-    - unconvert
-    - varcheck
-    - gocritic
-    - gofumpt
-
-linters-settings:
   gofumpt:
     lang-version: "1.17"
 
@@ -34,11 +15,94 @@ linters-settings:
     # by default
     extra-rules: false
 
+linters:
+  disable-all: true
+  enable:
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - contextcheck
+    - cyclop
+    - deadcode
+    - depguard
+    - dogsled
+    - dupl
+    - durationcheck
+    #- errcheck
+    - errname
+    - errorlint
+    - exhaustive
+    #- exhaustivestruct
+    - exportloopref
+    - forbidigo
+    - forcetypeassert
+    - funlen
+    - gci
+    - gochecknoglobals
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    # - godox
+    - goerr113
+    - gofmt
+    - gofumpt
+    - goheader
+    - goimports
+    - gomnd
+    - gomoddirectives
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ifshort
+    - importas
+    - ineffassign
+    - ireturn
+    # - lll
+    - makezero
+    - misspell
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnil
+    - nlreturn
+    - noctx
+    - nolintlint
+    #- paralleltest
+    - prealloc
+    - predeclared
+    - promlinter
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - structcheck
+    - stylecheck
+    #- tagliatelle
+    - tenv
+    #- testpackage
+    - thelper
+    - tparallel
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+    #- varnamelen
+    - wastedassign
+    - whitespace
+    #- wrapcheck
+    - wsl
+
 issues:
   exclude-use-default: false
   exclude:
       - should have a package comment
-      - should have comment
+      - should have comment.*or be unexported
 
 service:
   golangci-lint-version: 1.43.0 # use the fixed version to not introduce new linters unexpectedly

@@ -1,13 +1,16 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 
 	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/middlewares"
+	"euromoby.com/smsgw/internal/models"
 	"euromoby.com/smsgw/internal/services"
 	"euromoby.com/smsgw/internal/views"
-	"github.com/gin-gonic/gin"
 )
 
 type OutboundHandler struct {
@@ -22,13 +25,15 @@ func (h *OutboundHandler) Get(c *gin.Context) {
 	p := h.params(c)
 
 	messageDetail, err := h.service.FindByMerchantAndID(p.MerchantID, p.ID)
-	if err != nil {
-		views.ErrorJSON(c, http.StatusInternalServerError, err)
+	if errors.Is(err, models.ErrNotFound) {
+		views.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
+
 		return
 	}
 
-	if messageDetail == nil {
-		views.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
+	if err != nil {
+		views.ErrorJSON(c, http.StatusInternalServerError, err)
+
 		return
 	}
 
@@ -39,12 +44,14 @@ func (h *OutboundHandler) Search(c *gin.Context) {
 	p, err := h.searchParams(c)
 	if err != nil {
 		views.ErrorJSON(c, http.StatusBadRequest, err)
+
 		return
 	}
 
 	messages, err := h.service.FindByQuery(p)
 	if err != nil {
 		views.ErrorJSON(c, http.StatusInternalServerError, err)
+
 		return
 	}
 

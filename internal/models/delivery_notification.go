@@ -34,6 +34,7 @@ type DeliveryNotification struct {
 
 func MakeInboundDeliveryNotification(message *InboundMessage) *DeliveryNotification {
 	now := TimeNow()
+
 	return &DeliveryNotification{
 		MessageType:    MessageTypeInbound,
 		MessageID:      message.ID,
@@ -47,6 +48,7 @@ func MakeInboundDeliveryNotification(message *InboundMessage) *DeliveryNotificat
 
 func MakeOutboundDeliveryNotification(message *OutboundMessage) *DeliveryNotification {
 	now := TimeNow()
+
 	return &DeliveryNotification{
 		MessageType:    MessageTypeOutbound,
 		MessageID:      message.ID,

@@ -4,8 +4,9 @@ import (
 	"math"
 	"time"
 
-	"euromoby.com/smsgw/internal/logger"
 	"github.com/google/uuid"
+
+	"euromoby.com/smsgw/internal/logger"
 )
 
 func NewUUID() string {
@@ -13,6 +14,7 @@ func NewUUID() string {
 	if err != nil {
 		logger.Fatal(err)
 	}
+
 	return id.String()
 }
 
@@ -21,5 +23,5 @@ func TimeNow() time.Time {
 }
 
 func CalculateNextAttemptTime(counter int) time.Time {
-	return TimeNow().Add(time.Duration(30*math.Pow(2, float64(counter))) * time.Second)
+	return TimeNow().Add(time.Duration(30*math.Pow(2, float64(counter))) * time.Second) //nolint:gomnd
 }

@@ -4,9 +4,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gin-gonic/gin"
+
 	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/models"
-	"github.com/gin-gonic/gin"
 )
 
 const (
@@ -30,7 +31,7 @@ func queryParamIntDefault(c *gin.Context, param string, def int) (int, error) {
 func queryParamTime(c *gin.Context, param string) (*time.Time, error) {
 	value := c.Query(param)
 	if value == "" {
-		return nil, nil
+		return nil, nil //nolint: nilnil
 	}
 
 	t, err := time.Parse(time.RFC3339, value)
@@ -75,8 +76,7 @@ func commonSearchParams(c *gin.Context) (*inputs.SearchParams, error) {
 func messageSearchParams(c *gin.Context) (*inputs.MessageParams, error) {
 	p := inputs.MessageParams{}
 
-	msisdn := c.Query("msisdn")
-	if msisdn != "" {
+	if msisdn := c.Query("msisdn"); msisdn != "" {
 		normalized, err := models.NormalizeMSISDN(msisdn)
 		if err != nil {
 			return nil, err
@@ -85,8 +85,7 @@ func messageSearchParams(c *gin.Context) (*inputs.MessageParams, error) {
 		p.MSISDN = &normalized
 	}
 
-	status := c.Query("status")
-	if status != "" {
+	if status := c.Query("status"); status != "" {
 		p.Status = &status
 	}
 

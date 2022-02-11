@@ -4,12 +4,13 @@ import (
 	"errors"
 	"net/http"
 
-	"euromoby.com/smsgw/internal/config"
 	"github.com/gin-gonic/gin"
+
+	"euromoby.com/smsgw/internal/config"
 )
 
 const (
-	HeaderXApiKey = "X-Api-Key"
+	HeaderXApiKey = "X-Api-Key" //nolint:gosec
 
 	// MerchantIDKey is the key that holds the merchant ID in a request context.
 	MerchantIDKey = "MerchantID"
@@ -29,8 +30,10 @@ func (auth *Authenticator) Authenticate(c *gin.Context) {
 	merchant, err := auth.doAuthenticate(c.Request)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusForbidden, err)
+
 		return
 	}
+
 	c.Set(MerchantIDKey, merchant)
 	c.Next()
 }

@@ -20,14 +20,6 @@ func TestIndexHandler(t *testing.T) {
 		t.Errorf("Error decoding response body: %v", err)
 	}
 
-	if indexResponse.AppName != TestAppConfig.AppName {
-		t.Errorf("AppName is invalid")
-	}
-
-	if indexResponse.Version != TestAppConfig.Version {
-		t.Errorf("Version is invalid")
-	}
-
 	if indexResponse.Health != "OK" {
 		t.Errorf("App is not healthy")
 	}

@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
@@ -13,7 +14,8 @@ func Timeout(timeout time.Duration) gin.HandlerFunc {
 		ctx, cancel := context.WithTimeout(c.Request.Context(), timeout)
 		defer func() {
 			cancel()
-			if ctx.Err() == context.DeadlineExceeded {
+
+			if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 				c.AbortWithStatus(http.StatusGatewayTimeout)
 			}
 		}()

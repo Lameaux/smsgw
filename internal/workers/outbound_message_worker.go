@@ -1,6 +1,7 @@
 package workers
 
 import (
+	"errors"
 	"time"
 
 	"euromoby.com/smsgw/internal/config"
@@ -12,7 +13,8 @@ import (
 )
 
 const (
-	defaultSender = "SMSGW"
+	defaultSender              = "SMSGW"
+	outboundMessageMaxAttempts = 5
 )
 
 type OutboundMessageWorker struct {
@@ -35,6 +37,7 @@ func (w *OutboundMessageWorker) Run() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
 	defer tx.Rollback(ctx)
 
 	outboundMessageRepo := repos.NewOutboundMessageRepo(tx)
@@ -73,7 +76,7 @@ func (w *OutboundMessageWorker) Run() (bool, error) {
 	}
 
 	if err = tx.Commit(ctx); err != nil {
-		return false, nil
+		return false, err
 	}
 
 	return true, nil
@@ -110,11 +113,12 @@ func (w *OutboundMessageWorker) sendToProvider(messageOrder *models.MessageOrder
 }
 
 func (w *OutboundMessageWorker) handleFailure(message *models.OutboundMessage, resp *connectors.SendMessageResponse, err error) {
-	switch err {
-	case models.ErrSendFailed, models.ErrInvalidJSON:
+	switch {
+	case errors.Is(err, models.ErrSendFailed) || errors.Is(err, models.ErrInvalidJSON):
 		message.ProviderResponse = resp.Body
-	case models.ErrDeadLetter:
+	case errors.Is(err, models.ErrDeadLetter):
 		message.Status = models.OutboundMessageStatusFailed
+
 		return
 	default:
 		errorText := err.Error()
@@ -127,7 +131,9 @@ func (w *OutboundMessageWorker) handleFailure(message *models.OutboundMessage, r
 func (w *OutboundMessageWorker) tryReschedule(message *models.OutboundMessage) {
 	if message.AttemptCounter >= w.MaxAttempts() {
 		message.Status = models.OutboundMessageStatusFailed
+
 		logger.Errorw("sending failed", "worker", w.Name(), "sms", message)
+
 		return
 	}
 
@@ -170,7 +176,7 @@ func (w *OutboundMessageWorker) Name() string {
 }
 
 func (w *OutboundMessageWorker) MaxAttempts() int {
-	return 5
+	return outboundMessageMaxAttempts
 }
 
 func (w *OutboundMessageWorker) SleepTime() time.Duration {

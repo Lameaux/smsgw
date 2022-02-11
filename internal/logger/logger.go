@@ -5,9 +5,9 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-var sugaredLogger *zap.SugaredLogger
+var sugaredLogger *zap.SugaredLogger //nolint:gochecknoglobals
 
-func init() {
+func init() { //nolint:gochecknoinits
 	logConfig := zap.Config{
 		OutputPaths: []string{"stdout"},
 		Level:       zap.NewAtomicLevelAt(zap.InfoLevel),

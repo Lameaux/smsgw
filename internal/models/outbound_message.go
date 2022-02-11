@@ -30,6 +30,7 @@ type OutboundMessage struct {
 
 func NewOutboundMessage(merchantID string, messageOrderID string, msisdn MSISDN) *OutboundMessage {
 	now := TimeNow()
+
 	return &OutboundMessage{
 		MerchantID:     merchantID,
 		MessageOrderID: messageOrderID,

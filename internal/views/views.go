@@ -1,8 +1,9 @@
 package views
 
 import (
-	"euromoby.com/smsgw/internal/logger"
 	"github.com/gin-gonic/gin"
+
+	"euromoby.com/smsgw/internal/logger"
 )
 
 type ErrorResponse struct {

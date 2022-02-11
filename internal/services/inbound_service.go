@@ -27,9 +27,11 @@ func (s *InboundService) FindByShortcodeAndID(shortcode, id string) (*models.Inb
 	if err != nil {
 		return nil, err
 	}
+
 	defer conn.Release()
 
 	inboundMessageRepo := repos.NewInboundMessageRepo(conn)
+
 	return inboundMessageRepo.FindByShortcodeAndID(shortcode, id)
 }
 
@@ -41,9 +43,11 @@ func (s *InboundService) SaveMessage(m *models.InboundMessage) error {
 	if err != nil {
 		return err
 	}
+
 	defer conn.Release()
 
 	inboundMessageRepo := repos.NewInboundMessageRepo(conn)
+
 	return inboundMessageRepo.Save(m)
 }
 
@@ -55,6 +59,7 @@ func (s *InboundService) AckByShortcodeAndID(shortcode, id string) (*models.Inbo
 	if err != nil {
 		return nil, err
 	}
+
 	defer tx.Rollback(ctx)
 
 	inboundMessageRepo := repos.NewInboundMessageRepo(tx)
@@ -69,6 +74,7 @@ func (s *InboundService) AckByShortcodeAndID(shortcode, id string) (*models.Inbo
 	}
 
 	message.Status = models.InboundMessageStatusDelivered
+
 	err = inboundMessageRepo.Update(message)
 	if err != nil {
 		return nil, err
@@ -77,6 +83,7 @@ func (s *InboundService) AckByShortcodeAndID(shortcode, id string) (*models.Inbo
 	notificationRepo := repos.NewDeliveryNotificationRepo(tx)
 
 	n := models.MakeInboundDeliveryNotification(message)
+
 	err = notificationRepo.Save(n)
 	if err != nil {
 		return nil, err
@@ -97,6 +104,7 @@ func (s *InboundService) FindByQuery(p *inputs.InboundMessageSearchParams) ([]*m
 	if err != nil {
 		return nil, err
 	}
+
 	defer conn.Release()
 
 	inboundMessageRepo := repos.NewInboundMessageRepo(conn)

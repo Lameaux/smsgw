@@ -2,14 +2,16 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 
 	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/middlewares"
 	"euromoby.com/smsgw/internal/models"
 	"euromoby.com/smsgw/internal/services"
 	"euromoby.com/smsgw/internal/views"
-	"github.com/gin-gonic/gin"
 )
 
 type SendHandler struct {
@@ -24,15 +26,15 @@ func (h *SendHandler) SendMessage(c *gin.Context) {
 	p, err := h.parseRequest(c)
 	if err != nil {
 		views.ErrorJSON(c, http.StatusBadRequest, err)
+
 		return
 	}
 
 	result, err := h.service.SendMessage(p)
 	if err != nil {
-		switch err {
-		case models.ErrDuplicateClientTransactionID:
+		if errors.Is(err, models.ErrDuplicateClientTransactionID) {
 			c.JSON(http.StatusConflict, result)
-		default:
+		} else {
 			views.ErrorJSON(c, http.StatusInternalServerError, err)
 		}
 
@@ -44,11 +46,12 @@ func (h *SendHandler) SendMessage(c *gin.Context) {
 
 func (h *SendHandler) parseRequest(c *gin.Context) (*inputs.SendMessageParams, error) {
 	var p inputs.SendMessageParams
+
 	dec := json.NewDecoder(c.Request.Body)
+
 	dec.DisallowUnknownFields()
 
-	err := dec.Decode(&p)
-	if err != nil {
+	if err := dec.Decode(&p); err != nil {
 		return nil, err
 	}
 
@@ -58,6 +61,7 @@ func (h *SendHandler) parseRequest(c *gin.Context) (*inputs.SendMessageParams, e
 	if err != nil {
 		return nil, err
 	}
+
 	p.Recipients = recipients
 
 	// TODO: validate more inputs
@@ -73,6 +77,7 @@ func (h *SendHandler) normalizeRecipients(input []string) ([]models.MSISDN, erro
 		if err != nil {
 			return nil, err
 		}
+
 		m[normalized] = struct{}{}
 	}
 

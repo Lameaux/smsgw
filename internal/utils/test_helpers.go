@@ -9,15 +9,17 @@ import (
 	"euromoby.com/smsgw/internal/logger"
 )
 
-var tables = []string{
+var tables = []string{ //nolint:gochecknoglobals
 	"message_orders",
 	"outbound_messages",
 	"inbound_messages",
 	"inbound_notifications",
 }
 
+const execTimeout = 2 * time.Second
+
 func CleanupDatabase(db db.Conn) {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), execTimeout)
 	defer cancel()
 
 	for _, table := range tables {

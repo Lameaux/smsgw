@@ -1,14 +1,16 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 
 	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/middlewares"
 	"euromoby.com/smsgw/internal/models"
 	"euromoby.com/smsgw/internal/services"
 	"euromoby.com/smsgw/internal/views"
-	"github.com/gin-gonic/gin"
 )
 
 type InboundHandler struct {
@@ -25,17 +27,20 @@ func (h *InboundHandler) Get(c *gin.Context) {
 	err := h.service.ValidateShortcode(p.MerchantID, p.Shortcode)
 	if err != nil {
 		views.ErrorJSON(c, http.StatusForbidden, err)
+
 		return
 	}
 
 	message, err := h.service.FindByShortcodeAndID(p.Shortcode, p.ID)
 	if err != nil {
 		views.ErrorJSON(c, http.StatusInternalServerError, err)
+
 		return
 	}
 
 	if message == nil {
 		views.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
+
 		return
 	}
 
@@ -48,22 +53,24 @@ func (h *InboundHandler) Ack(c *gin.Context) {
 	err := h.service.ValidateShortcode(p.MerchantID, p.Shortcode)
 	if err != nil {
 		views.ErrorJSON(c, http.StatusForbidden, err)
+
 		return
 	}
 
 	m, err := h.service.AckByShortcodeAndID(p.Shortcode, p.ID)
 	if err != nil {
-		switch err {
-		case models.ErrAlreadyAcked:
+		if errors.Is(err, models.ErrAlreadyAcked) {
 			c.JSON(http.StatusConflict, m)
-		default:
+		} else {
 			views.ErrorJSON(c, http.StatusInternalServerError, err)
 		}
+
 		return
 	}
 
 	if m == nil {
 		views.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
+
 		return
 	}
 
@@ -74,18 +81,21 @@ func (h *InboundHandler) Search(c *gin.Context) {
 	p, err := h.searchParams(c)
 	if err != nil {
 		views.ErrorJSON(c, http.StatusBadRequest, err)
+
 		return
 	}
 
 	err = h.service.ValidateShortcode(p.MerchantID, p.Shortcode)
 	if err != nil {
 		views.ErrorJSON(c, http.StatusForbidden, err)
+
 		return
 	}
 
 	messages, err := h.service.FindByQuery(p)
 	if err != nil {
 		views.ErrorJSON(c, http.StatusInternalServerError, err)
+
 		return
 	}
 

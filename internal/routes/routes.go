@@ -1,15 +1,16 @@
 package routes
 
 import (
+	"github.com/gin-gonic/gin"
+
 	"euromoby.com/smsgw/internal/config"
 	"euromoby.com/smsgw/internal/handlers"
 	"euromoby.com/smsgw/internal/middlewares"
 	"euromoby.com/smsgw/internal/providers/callbacks/sandbox"
 	"euromoby.com/smsgw/internal/services"
-	"github.com/gin-gonic/gin"
 )
 
-func Gin(app *config.AppConfig) *gin.Engine {
+func Gin(app *config.AppConfig) *gin.Engine { //nolint:funlen
 	r := gin.Default()
 	r.Use(middlewares.Timeout(app.WaitTimeout))
 
@@ -64,7 +65,6 @@ func Gin(app *config.AppConfig) *gin.Engine {
 		ci.POST("/:shortcode", cb.RegisterCallback)
 		ci.PUT("/:shortcode", cb.UpdateCallback)
 		ci.DELETE("/:shortcode", cb.UnregisterCallback)
-
 	}
 
 	ps := r.Group("/v1/sms/providers/sandbox")

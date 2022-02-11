@@ -8,7 +8,7 @@ import (
 	"euromoby.com/smsgw/internal/utils"
 )
 
-var TestAppConfig *config.AppConfig
+var TestAppConfig *config.AppConfig //nolint:gochecknoglobals
 
 func TestMain(m *testing.M) {
 	TestAppConfig = config.NewTestAppConfig()
@@ -17,6 +17,7 @@ func TestMain(m *testing.M) {
 
 	os.Exit(func() int {
 		defer TestAppConfig.Shutdown()
+
 		return m.Run()
 	}())
 }

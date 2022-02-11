@@ -5,10 +5,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/jackc/pgx/v4/pgxpool"
+
 	"euromoby.com/smsgw/internal/httpclient"
 	"euromoby.com/smsgw/internal/logger"
 	"euromoby.com/smsgw/internal/utils"
-	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type AppConfig struct {
@@ -35,6 +36,8 @@ const (
 	defaultConnectionTimeout = "5"
 	defaultTLSTimeout        = "5"
 	defaultReadTimeout       = "10"
+
+	dbPingTimeout = 2 * time.Second
 )
 
 const defaultWorkerSleep = 5
@@ -120,7 +123,7 @@ func (app *AppConfig) configurePGXPool(uri string) {
 		logger.Fatal(err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), dbPingTimeout)
 	defer cancel()
 
 	err = pool.Ping(ctx)

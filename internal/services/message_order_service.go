@@ -24,6 +24,7 @@ func (s *MessageOrderService) FindByMerchantAndID(merchantID, id string) (*views
 	if err != nil {
 		return nil, err
 	}
+
 	defer conn.Release()
 
 	messageOrderRepo := repos.NewMessageOrderRepo(conn)
@@ -31,10 +32,6 @@ func (s *MessageOrderService) FindByMerchantAndID(merchantID, id string) (*views
 	messageOrder, err := messageOrderRepo.FindByMerchantAndID(merchantID, id)
 	if err != nil {
 		return nil, err
-	}
-
-	if messageOrder == nil {
-		return nil, nil
 	}
 
 	outboundMessageRepo := repos.NewOutboundMessageRepo(conn)
@@ -55,6 +52,7 @@ func (s *MessageOrderService) FindByQuery(p *inputs.MessageOrderSearchParams) ([
 	if err != nil {
 		return nil, err
 	}
+
 	defer conn.Release()
 
 	messageOrderRepo := repos.NewMessageOrderRepo(conn)
@@ -75,11 +73,13 @@ func (s *MessageOrderService) SendMessage(params *inputs.SendMessageParams) (*vi
 	if err != nil {
 		return nil, err
 	}
+
 	defer tx.Rollback(ctx)
 
 	messageOrderRepo := repos.NewMessageOrderRepo(tx)
 
 	order := s.makeMessageOrder(params)
+
 	err = messageOrderRepo.Save(order)
 	if err != nil {
 		return nil, err
@@ -110,6 +110,7 @@ func (s *MessageOrderService) SendMessage(params *inputs.SendMessageParams) (*vi
 
 func (s *MessageOrderService) makeMessageOrder(p *inputs.SendMessageParams) *models.MessageOrder {
 	now := models.TimeNow()
+
 	return &models.MessageOrder{
 		MerchantID:          p.MerchantID,
 		Sender:              p.Sender,

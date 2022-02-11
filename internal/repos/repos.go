@@ -8,16 +8,22 @@ import (
 	"euromoby.com/smsgw/internal/inputs"
 )
 
+const (
+	connTimeout  = 1 * time.Second
+	queryTimeout = 3 * time.Second
+	txTimeout    = 1 * time.Second
+)
+
 func DBConnContext() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), 1*time.Second)
+	return context.WithTimeout(context.Background(), connTimeout)
 }
 
 func DBQueryContext() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), 3*time.Second)
+	return context.WithTimeout(context.Background(), queryTimeout)
 }
 
 func DBTxContext() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), 1*time.Second)
+	return context.WithTimeout(context.Background(), txTimeout)
 }
 
 func appendMessageParams(q *inputs.MessageParams, stmt string, args []interface{}) (string, []interface{}) {

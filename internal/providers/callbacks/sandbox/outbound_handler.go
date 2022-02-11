@@ -2,12 +2,14 @@ package sandbox
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 
 	"euromoby.com/smsgw/internal/models"
 	"euromoby.com/smsgw/internal/services"
 	"euromoby.com/smsgw/internal/views"
-	"github.com/gin-gonic/gin"
 )
 
 type OutboundHandler struct {
@@ -22,22 +24,24 @@ func (h OutboundHandler) Ack(c *gin.Context) {
 	p, err := h.parseRequest(c.Request)
 	if err != nil {
 		views.ErrorJSON(c, http.StatusBadRequest, err)
+
 		return
 	}
 
 	m, err := h.service.AckByProviderAndMessageID(SandboxProviderID, p.MessageID)
 	if err != nil {
-		switch err {
-		case models.ErrAlreadyAcked:
+		if errors.Is(err, models.ErrAlreadyAcked) {
 			c.JSON(http.StatusConflict, m)
-		default:
+		} else {
 			views.ErrorJSON(c, http.StatusInternalServerError, err)
 		}
+
 		return
 	}
 
 	if m == nil {
 		views.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
+
 		return
 	}
 
@@ -46,11 +50,12 @@ func (h OutboundHandler) Ack(c *gin.Context) {
 
 func (h OutboundHandler) parseRequest(r *http.Request) (*OutboundDelivery, error) {
 	var mreq OutboundDelivery
+
 	dec := json.NewDecoder(r.Body)
+
 	dec.DisallowUnknownFields()
 
-	err := dec.Decode(&mreq)
-	if err != nil {
+	if err := dec.Decode(&mreq); err != nil {
 		return nil, err
 	}
 

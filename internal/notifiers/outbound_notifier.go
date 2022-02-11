@@ -2,6 +2,7 @@ package notifiers
 
 import (
 	"io"
+	"net/http"
 
 	"euromoby.com/smsgw/internal/config"
 	"euromoby.com/smsgw/internal/logger"
@@ -34,11 +35,15 @@ func (on *OutboundNotifier) SendNotification(messageOrder *models.MessageOrder, 
 		Body: &respBody,
 	}
 
-	statusOK := httpResp.StatusCode >= 200 && httpResp.StatusCode < 300
-	if !statusOK {
+	if !on.Success(httpResp) {
 		return &r, models.ErrSendFailed
 	}
 
 	logger.Infow("notification sent", "sms", message)
+
 	return &r, nil
+}
+
+func (on *OutboundNotifier) Success(response *http.Response) bool {
+	return response.StatusCode >= 200 && response.StatusCode < 300
 }

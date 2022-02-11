@@ -3,9 +3,10 @@ package repos
 import (
 	"testing"
 
-	"euromoby.com/smsgw/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"euromoby.com/smsgw/internal/models"
 )
 
 func TestOutboundMessageRepo_Save(t *testing.T) {

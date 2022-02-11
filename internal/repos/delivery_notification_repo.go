@@ -1,9 +1,12 @@
 package repos
 
 import (
+	"errors"
+
+	"github.com/jackc/pgx/v4"
+
 	"euromoby.com/smsgw/internal/db"
 	"euromoby.com/smsgw/internal/models"
-	"github.com/jackc/pgx/v4"
 )
 
 const (
@@ -37,7 +40,9 @@ func (r *DeliveryNotificationRepo) Save(in *models.DeliveryNotification) error {
 	values ($1, $2, $3, $4, $5, $6, $7, $8)
 	returning id
 	`
+
 	var insertedID string
+
 	err := r.db.QueryRow(ctx, stmt,
 		in.MessageType,
 		in.MessageID,
@@ -51,6 +56,7 @@ func (r *DeliveryNotificationRepo) Save(in *models.DeliveryNotification) error {
 	if err != nil {
 		return err
 	}
+
 	in.ID = insertedID
 
 	return nil
@@ -89,19 +95,24 @@ func (r *DeliveryNotificationRepo) FindOneForProcessing(messageType models.Messa
 	for update skip locked
  	limit 1
 	`
+
 	return r.querySingle(stmt, messageType, models.OutboundMessageStatusNew, models.TimeNow())
 }
 
 func (r *DeliveryNotificationRepo) querySingle(stmt string, args ...interface{}) (*models.DeliveryNotification, error) {
 	ctx, cancel := DBQueryContext()
 	defer cancel()
+
 	row := r.db.QueryRow(ctx, stmt, args...)
 
 	var d models.DeliveryNotification
-	switch err := r.scanRow(row, &d); err {
-	case pgx.ErrNoRows:
-		return nil, nil
-	case nil:
+
+	err := r.scanRow(row, &d)
+
+	switch {
+	case errors.Is(err, pgx.ErrNoRows):
+		return nil, models.ErrNotFound
+	case err == nil:
 		return &d, nil
 	default:
 		return nil, err

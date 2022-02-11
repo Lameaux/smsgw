@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
@@ -10,7 +11,9 @@ import (
 	"euromoby.com/smsgw/internal/routes"
 )
 
-var srv *http.Server
+var srv *http.Server //nolint:gochecknoglobals
+
+const serverShutdownTimeout = 5 * time.Second
 
 func startAPIServer(app *config.AppConfig) {
 	srv = &http.Server{
@@ -23,7 +26,7 @@ func startAPIServer(app *config.AppConfig) {
 	// Initializing the server in a goroutine so that
 	// it won't block the graceful shutdown handling below
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logger.Fatal("listen: %s\n", err)
 		}
 	}()
@@ -32,12 +35,12 @@ func startAPIServer(app *config.AppConfig) {
 func shutdownAPIServer() {
 	logger.Infow("shutting down API server")
 
-	// The context is used to inform the server it has 5 seconds to finish
-	// the request it is currently handling
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), serverShutdownTimeout)
 	defer cancel()
+
 	if err := srv.Shutdown(ctx); err != nil {
 		logger.Fatal("api server forced to shutdown: ", err)
 	}
+
 	logger.Infow("api server exiting")
 }

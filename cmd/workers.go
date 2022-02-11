@@ -3,17 +3,18 @@ package main
 import (
 	"context"
 
+	"golang.org/x/sync/errgroup"
+
 	"euromoby.com/smsgw/internal/config"
 	"euromoby.com/smsgw/internal/logger"
 	"euromoby.com/smsgw/internal/notifiers"
 	"euromoby.com/smsgw/internal/providers/connectors"
 	"euromoby.com/smsgw/internal/workers"
-	"golang.org/x/sync/errgroup"
 )
 
 var (
-	workersGroup  errgroup.Group
-	cancelWorkers context.CancelFunc
+	workersGroup  errgroup.Group     //nolint:gochecknoglobals
+	cancelWorkers context.CancelFunc //nolint:gochecknoglobals
 )
 
 func startWorkers(app *config.AppConfig) {
@@ -32,6 +33,7 @@ func startWorkers(app *config.AppConfig) {
 
 	for _, r := range runners {
 		r := r
+
 		workersGroup.Go(func() error {
 			return r.Exec()
 		})
@@ -46,5 +48,6 @@ func shutdownWorkers() {
 	if err := workersGroup.Wait(); err != nil {
 		logger.Errorw("error while stopping workers", "error", err)
 	}
+
 	logger.Infow("workers stopped")
 }
