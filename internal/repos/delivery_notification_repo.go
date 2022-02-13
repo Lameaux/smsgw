@@ -1,22 +1,14 @@
 package repos
 
 import (
-	"errors"
-
-	"github.com/jackc/pgx/v4"
+	sq "github.com/Masterminds/squirrel"
 
 	"euromoby.com/smsgw/internal/db"
 	"euromoby.com/smsgw/internal/models"
 )
 
 const (
-	selectDeliveryNotificationBase = `select
-	id, message_type, message_id, status,
-	last_response,
-	next_attempt_at, attempt_counter,
-	created_at, updated_at
-	from delivery_notifications
-	`
+	tableNameDeliveryNotifications = "delivery_notifications"
 )
 
 type DeliveryNotificationRepo struct {
@@ -27,108 +19,74 @@ func NewDeliveryNotificationRepo(db db.Conn) *DeliveryNotificationRepo {
 	return &DeliveryNotificationRepo{db}
 }
 
-func (r *DeliveryNotificationRepo) Save(in *models.DeliveryNotification) error {
-	ctx, cancel := DBQueryContext()
-	defer cancel()
+func (r *DeliveryNotificationRepo) Save(dn *models.DeliveryNotification) error {
+	sb := dbQueryBuilder().Insert(tableNameDeliveryNotifications).
+		Columns(
+			"message_type",
+			"message_id",
+			"status",
+			"last_response",
+			"next_attempt_at",
+			"attempt_counter",
+			"created_at",
+			"updated_at",
+		).
+		Values(
+			dn.MessageType,
+			dn.MessageID,
+			dn.Status,
+			dn.LastResponse,
+			dn.NextAttemptAt,
+			dn.AttemptCounter,
+			dn.CreatedAt,
+			dn.UpdatedAt,
+		).
+		Suffix(`RETURNING "id"`)
 
-	stmt := `insert into delivery_notifications (
-		message_type, message_id,
-		status, last_response,
-		next_attempt_at, attempt_counter,
-		created_at, updated_at
-	)
-	values ($1, $2, $3, $4, $5, $6, $7, $8)
-	returning id
-	`
-
-	var insertedID string
-
-	err := r.db.QueryRow(ctx, stmt,
-		in.MessageType,
-		in.MessageID,
-		in.Status,
-		in.LastResponse,
-		in.NextAttemptAt,
-		in.AttemptCounter,
-		in.CreatedAt,
-		in.UpdatedAt,
-	).Scan(&insertedID)
-	if err != nil {
-		return err
-	}
-
-	in.ID = insertedID
-
-	return nil
+	return dbQuerySingle(r.db, &dn.ID, sb)
 }
 
-func (r *DeliveryNotificationRepo) Update(om *models.DeliveryNotification) error {
-	ctx, cancel := DBQueryContext()
-	defer cancel()
+func (r *DeliveryNotificationRepo) Update(dn *models.DeliveryNotification) error {
+	dn.UpdatedAt = models.TimeNow()
 
-	stmt := `update delivery_notifications
-	set status = $1,
-	last_response = $2,
-	next_attempt_at = $3, attempt_counter = $4,
-	updated_at = $5
-	where id = $6`
+	sb := dbQueryBuilder().Update(tableNameOutboundMessages).SetMap(
+		map[string]interface{}{
+			"status":          dn.Status,
+			"last_response":   dn.LastResponse,
+			"next_attempt_at": dn.NextAttemptAt,
+			"attempt_counter": dn.AttemptCounter,
+			"updated_at":      dn.UpdatedAt,
+		},
+	).Where("id = ?", dn.ID)
 
-	om.UpdatedAt = models.TimeNow()
-
-	_, err := r.db.Exec(ctx, stmt,
-		om.Status,
-		om.LastResponse,
-		om.NextAttemptAt,
-		om.AttemptCounter,
-		om.UpdatedAt,
-		om.ID,
-	)
-
-	return err
+	return dbExec(r.db, sb)
 }
 
 func (r *DeliveryNotificationRepo) FindOneForProcessing(messageType models.MessageType) (*models.DeliveryNotification, error) {
-	stmt := selectDeliveryNotificationBase + `
-	where message_type = $1
-	and status = $2
-	and next_attempt_at < $3
-	for update skip locked
- 	limit 1
-	`
+	var msg models.DeliveryNotification
 
-	return r.querySingle(stmt, messageType, models.OutboundMessageStatusNew, models.TimeNow())
+	sb := r.selectBase().
+		Where("message_type = ?", messageType).
+		Where("status = ?", models.DeliveryNotificationStatusNew).
+		Where("next_attempt_at < ?", models.TimeNow()).
+		Suffix("for update skip locked").
+		Limit(1)
+
+	err := dbQuerySingle(r.db, &msg, sb)
+
+	return &msg, err
 }
 
-func (r *DeliveryNotificationRepo) querySingle(stmt string, args ...interface{}) (*models.DeliveryNotification, error) {
-	ctx, cancel := DBQueryContext()
-	defer cancel()
-
-	row := r.db.QueryRow(ctx, stmt, args...)
-
-	var d models.DeliveryNotification
-
-	err := r.scanRow(row, &d)
-
-	switch {
-	case errors.Is(err, pgx.ErrNoRows):
-		return nil, models.ErrNotFound
-	case err == nil:
-		return &d, nil
-	default:
-		return nil, err
-	}
-}
-
-func (r *DeliveryNotificationRepo) scanRow(row pgx.Row, m *models.DeliveryNotification) error {
-	return row.Scan(
-		&m.ID,
-		&m.MessageType,
-		&m.MessageID,
-		&m.Status,
-		&m.LastResponse,
-		&m.NextAttemptAt,
-		&m.AttemptCounter,
-		&m.CreatedAt,
-		&m.UpdatedAt,
-	)
+func (r *DeliveryNotificationRepo) selectBase() sq.SelectBuilder {
+	return dbQueryBuilder().Select(
+		"id",
+		"message_type",
+		"message_id",
+		"status",
+		"last_response",
+		"next_attempt_at",
+		"attempt_counter",
+		"created_at",
+		"updated_at",
+	).From(tableNameDeliveryNotifications)
 }

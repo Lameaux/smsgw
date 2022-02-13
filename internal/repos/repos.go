@@ -2,7 +2,6 @@ package repos
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -19,23 +18,32 @@ const (
 	txTimeout    = 1 * time.Second
 )
 
-func DBConnContext() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), connTimeout)
+type sqler interface {
+	ToSql() (string, []interface{}, error)
 }
 
-func DBQueryContext() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), queryTimeout)
+func DBConnContext() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), connTimeout)
 }
 
 func DBTxContext() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), txTimeout)
 }
 
-func DBQueryGet(conn db.Conn, dst interface{}, query string, args ...interface{}) error {
-	ctx, cancel := DBQueryContext()
+func dbQueryContext() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), queryTimeout)
+}
+
+func dbQuerySingle(conn db.Conn, dst interface{}, sb sqler) error {
+	stmt, args, err := sb.ToSql()
+	if err != nil {
+		return err
+	}
+
+	ctx, cancel := dbQueryContext()
 	defer cancel()
 
-	err := pgxscan.Get(ctx, conn, dst, query, args...)
+	err = pgxscan.Get(ctx, conn, dst, stmt, args...)
 	if pgxscan.NotFound(err) {
 		return models.ErrNotFound
 	}
@@ -43,29 +51,46 @@ func DBQueryGet(conn db.Conn, dst interface{}, query string, args ...interface{}
 	return err
 }
 
-func DBQuerySelect(conn db.Conn, dst interface{}, query string, args ...interface{}) error {
-	ctx, cancel := DBQueryContext()
+func dbQueryAll(conn db.Conn, dst interface{}, sb sqler) error {
+	stmt, args, err := sb.ToSql()
+	if err != nil {
+		return err
+	}
+
+	ctx, cancel := dbQueryContext()
 	defer cancel()
 
-	return pgxscan.Select(ctx, conn, dst, query, args...)
+	return pgxscan.Select(ctx, conn, dst, stmt, args...)
 }
 
-func DBQueryBuilder() sq.StatementBuilderType {
+func dbExec(conn db.Conn, sb sqler) error {
+	stmt, args, err := sb.ToSql()
+	if err != nil {
+		return err
+	}
+
+	ctx, cancel := dbQueryContext()
+	defer cancel()
+
+	_, err = conn.Exec(ctx, stmt, args...)
+
+	return err
+}
+
+func dbQueryBuilder() sq.StatementBuilderType {
 	return sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 }
 
-func appendMessageParams(q *inputs.MessageParams, stmt string, args []interface{}) (string, []interface{}) {
+func appendMessageParams(q *inputs.MessageParams, sb sq.SelectBuilder) sq.SelectBuilder {
 	if q.MSISDN != nil {
-		args = append(args, q.MSISDN)
-		stmt += fmt.Sprintf("and msisdn = $%d\n", len(args))
+		sb = sb.Where("and msisdn = ?", q.MSISDN)
 	}
 
 	if q.Status != nil {
-		args = append(args, q.Status)
-		stmt += fmt.Sprintf("and status = $%d\n", len(args))
+		sb = sb.Where("and status = ?", q.Status)
 	}
 
-	return stmt, args
+	return sb
 }
 
 func appendSearchParams(q *inputs.SearchParams, sb sq.SelectBuilder) sq.SelectBuilder {

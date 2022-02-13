@@ -1,10 +1,7 @@
 package repos
 
 import (
-	"errors"
-	"fmt"
-
-	"github.com/jackc/pgx/v4"
+	sq "github.com/Masterminds/squirrel"
 
 	"euromoby.com/smsgw/internal/db"
 	"euromoby.com/smsgw/internal/inputs"
@@ -12,13 +9,7 @@ import (
 )
 
 const (
-	selectOutboundMessagesBase = `select
-	id, merchant_id, message_order_id, status, msisdn,
-	provider_id, provider_message_id, provider_response,
-	next_attempt_at, attempt_counter,
-	created_at, updated_at
-	from outbound_messages
-	`
+	tableNameOutboundMessages = "outbound_messages"
 )
 
 type OutboundMessageRepo struct {
@@ -30,173 +21,133 @@ func NewOutboundMessageRepo(db db.Conn) *OutboundMessageRepo {
 }
 
 func (r *OutboundMessageRepo) Save(om *models.OutboundMessage) error {
-	ctx, cancel := DBQueryContext()
-	defer cancel()
+	sb := dbQueryBuilder().Insert(tableNameOutboundMessages).
+		Columns(
+			"merchant_id",
+			"message_order_id",
+			"status",
+			"msisdn",
+			"next_attempt_at",
+			"attempt_counter",
+			"created_at",
+			"updated_at",
+		).
+		Values(
+			om.MerchantID,
+			om.MessageOrderID,
+			om.Status,
+			om.MSISDN,
+			om.NextAttemptAt,
+			om.AttemptCounter,
+			om.CreatedAt,
+			om.UpdatedAt,
+		).
+		Suffix(`RETURNING "id"`)
 
-	stmt := `insert into outbound_messages (
-		merchant_id, message_order_id, status, msisdn,
-		next_attempt_at, attempt_counter,
-		created_at, updated_at
-	)
-	values ($1, $2, $3, $4, $5, $6, $7, $8)
-	returning id
-	`
-
-	var insertedID string
-
-	err := r.db.QueryRow(ctx, stmt,
-		om.MerchantID,
-		om.MessageOrderID,
-		om.Status,
-		om.MSISDN,
-		om.NextAttemptAt,
-		om.AttemptCounter,
-		om.CreatedAt,
-		om.UpdatedAt,
-	).Scan(&insertedID)
-	if err != nil {
-		return err
-	}
-
-	om.ID = insertedID
-
-	return nil
+	return dbQuerySingle(r.db, &om.ID, sb)
 }
 
 func (r *OutboundMessageRepo) Update(om *models.OutboundMessage) error {
-	ctx, cancel := DBQueryContext()
-	defer cancel()
-
-	stmt := `update outbound_messages
-	set status = $1,
-	provider_id = $2, provider_response = $3, provider_message_id = $4,
-	next_attempt_at = $5, attempt_counter = $6,
-	updated_at = $7
-	where id = $8`
-
 	om.UpdatedAt = models.TimeNow()
 
-	_, err := r.db.Exec(ctx, stmt,
-		om.Status,
-		om.ProviderID,
-		om.ProviderResponse,
-		om.ProviderMessageID,
-		om.NextAttemptAt,
-		om.AttemptCounter,
-		om.UpdatedAt,
-		om.ID,
-	)
+	sb := dbQueryBuilder().Update(tableNameOutboundMessages).SetMap(
+		map[string]interface{}{
+			"status":              om.Status,
+			"provider_id":         om.ProviderID,
+			"provider_response":   om.ProviderResponse,
+			"provider_message_id": om.ProviderMessageID,
+			"next_attempt_at":     om.NextAttemptAt,
+			"attempt_counter":     om.AttemptCounter,
+			"updated_at":          om.UpdatedAt,
+		},
+	).Where("id = ?", om.ID)
 
-	return err
+	return dbExec(r.db, sb)
 }
 
 func (r *OutboundMessageRepo) FindByID(id string) (*models.OutboundMessage, error) {
-	stmt := selectOutboundMessagesBase + "where id = $1"
+	var msg models.OutboundMessage
 
-	return r.querySingle(stmt, id)
+	sb := r.selectBase().Where("id = ?", id)
+	err := dbQuerySingle(r.db, &msg, sb)
+
+	return &msg, err
 }
 
 func (r *OutboundMessageRepo) FindByMerchantAndID(merchantID, id string) (*models.OutboundMessage, error) {
-	stmt := selectOutboundMessagesBase + "where merchant_id = $1 AND id = $2"
+	var msg models.OutboundMessage
 
-	return r.querySingle(stmt, merchantID, id)
+	sb := r.selectBase().
+		Where("merchant_id = ?", merchantID).
+		Where("id = ?", id)
+
+	err := dbQuerySingle(r.db, &msg, sb)
+
+	return &msg, err
 }
 
 func (r *OutboundMessageRepo) FindByMerchantAndOrderID(merchantID, orderID string) ([]*models.OutboundMessage, error) {
-	stmt := selectOutboundMessagesBase + "where merchant_id = $1 AND message_order_id = $2"
+	sb := r.selectBase().
+		Where("merchant_id = ?", merchantID).
+		Where("message_order_id = ?", orderID)
 
-	return r.query(stmt, merchantID, orderID)
+	messages := []*models.OutboundMessage{}
+	err := dbQueryAll(r.db, &messages, sb)
+
+	return messages, err
 }
 
 func (r *OutboundMessageRepo) FindByProviderAndMessageID(providerID, messageID string) (*models.OutboundMessage, error) {
-	stmt := selectOutboundMessagesBase + "where provider_id = $1 AND provider_message_id = $2"
+	var msg models.OutboundMessage
 
-	return r.querySingle(stmt, providerID, messageID)
+	sb := r.selectBase().
+		Where("provider_id = ?", providerID).
+		Where("provider_message_id = ?", messageID)
+
+	err := dbQuerySingle(r.db, &msg, sb)
+
+	return &msg, err
 }
 
 func (r *OutboundMessageRepo) FindByQuery(q *inputs.OutboundMessageSearchParams) ([]*models.OutboundMessage, error) {
-	stmt := selectOutboundMessagesBase
-	args := make([]interface{}, 0)
+	sb := r.selectBase().Where("merchant_id = ?", q.MerchantID)
 
-	args = append(args, q.MerchantID)
-	stmt += fmt.Sprintf("where merchant_id = $%d\n", len(args))
+	sb = appendMessageParams(q.MessageParams, sb)
+	sb = appendSearchParams(q.SearchParams, sb)
 
-	stmt, args = appendMessageParams(q.MessageParams, stmt, args)
-	// stmt, args = appendSearchParams(q.SearchParams, stmt, args)
+	messages := []*models.OutboundMessage{}
+	err := dbQueryAll(r.db, &messages, sb)
 
-	return r.query(stmt, args...)
+	return messages, err
 }
 
 func (r *OutboundMessageRepo) FindOneForProcessing() (*models.OutboundMessage, error) {
-	stmt := selectOutboundMessagesBase + `
-	where status = $1
-	and next_attempt_at < $2
-	for update skip locked
- 	limit 1
-	`
+	var msg models.OutboundMessage
 
-	return r.querySingle(stmt, models.OutboundMessageStatusNew, models.TimeNow())
+	sb := r.selectBase().
+		Where("status = ?", models.OutboundMessageStatusNew).
+		Where("next_attempt_at < ?", models.TimeNow()).
+		Suffix("for update skip locked").
+		Limit(1)
+
+	err := dbQuerySingle(r.db, &msg, sb)
+
+	return &msg, err
 }
 
-func (r *OutboundMessageRepo) query(stmt string, args ...interface{}) ([]*models.OutboundMessage, error) {
-	messages := []*models.OutboundMessage{}
-
-	ctx, cancel := DBQueryContext()
-	defer cancel()
-
-	rows, err := r.db.Query(ctx, stmt, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var om models.OutboundMessage
-
-		err = r.scanRow(rows, &om)
-		if err != nil {
-			return nil, err
-		}
-
-		messages = append(messages, &om)
-	}
-
-	return messages, nil
-}
-
-func (r *OutboundMessageRepo) querySingle(stmt string, args ...interface{}) (*models.OutboundMessage, error) {
-	ctx, cancel := DBQueryContext()
-	defer cancel()
-
-	row := r.db.QueryRow(ctx, stmt, args...)
-
-	var om models.OutboundMessage
-
-	err := r.scanRow(row, &om)
-
-	switch {
-	case errors.Is(err, pgx.ErrNoRows):
-		return nil, models.ErrNotFound
-	case err == nil:
-		return &om, nil
-	default:
-		return nil, err
-	}
-}
-
-func (r *OutboundMessageRepo) scanRow(row pgx.Row, m *models.OutboundMessage) error {
-	return row.Scan(
-		&m.ID,
-		&m.MerchantID,
-		&m.MessageOrderID,
-		&m.Status,
-		&m.MSISDN,
-		&m.ProviderID,
-		&m.ProviderMessageID,
-		&m.ProviderResponse,
-		&m.NextAttemptAt,
-		&m.AttemptCounter,
-		&m.CreatedAt,
-		&m.UpdatedAt,
-	)
+func (r *OutboundMessageRepo) selectBase() sq.SelectBuilder {
+	return dbQueryBuilder().Select(
+		"id",
+		"merchant_id",
+		"message_order_id",
+		"status",
+		"msisdn",
+		"provider_id",
+		"provider_message_id",
+		"provider_response",
+		"next_attempt_at",
+		"attempt_counter",
+		"created_at",
+		"updated_at",
+	).From(tableNameOutboundMessages)
 }
