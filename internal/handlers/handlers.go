@@ -1,26 +1,26 @@
 package handlers
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
 	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/models"
+	"euromoby.com/smsgw/internal/utils"
 )
 
 const (
 	defaultLimit = 10
 )
 
-func queryParamIntDefault(c *gin.Context, param string, def int) (int, error) {
+func queryParamUint64Default(c *gin.Context, param string, def uint64) (uint64, error) {
 	value := c.Query(param)
 	if value == "" {
 		return def, nil
 	}
 
-	i, err := strconv.Atoi(value)
+	i, err := utils.ParseUint64(value)
 	if err != nil {
 		return def, err
 	}
@@ -43,12 +43,12 @@ func queryParamTime(c *gin.Context, param string) (*time.Time, error) {
 }
 
 func commonSearchParams(c *gin.Context) (*inputs.SearchParams, error) {
-	offset, err := queryParamIntDefault(c, "offset", 0)
+	offset, err := queryParamUint64Default(c, "offset", 0)
 	if err != nil {
 		return nil, err
 	}
 
-	limit, err := queryParamIntDefault(c, "limit", defaultLimit)
+	limit, err := queryParamUint64Default(c, "limit", defaultLimit)
 	if err != nil {
 		return nil, err
 	}

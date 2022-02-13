@@ -2,10 +2,9 @@ package repos
 
 import (
 	"errors"
-	"fmt"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgconn"
-	"github.com/jackc/pgx/v4"
 
 	"euromoby.com/smsgw/internal/db"
 	"euromoby.com/smsgw/internal/inputs"
@@ -17,12 +16,6 @@ type MessageOrderRepo struct {
 }
 
 const (
-	selectMessageOrdersBase = `select
-	id, merchant_id, sender, body, client_transaction_id,
-	notification_url,
-	created_at, updated_at
-	from message_orders
-	`
 	constraintNameClientTransactionID = "message_orders_client_transaction_id"
 )
 
@@ -31,61 +24,70 @@ func NewMessageOrderRepo(db db.Conn) *MessageOrderRepo {
 }
 
 func (r *MessageOrderRepo) Save(mo *models.MessageOrder) error {
-	var insertedID string
-
-	stmt := `insert into message_orders (
-		merchant_id, sender, body, client_transaction_id,
-		notification_url, created_at, updated_at
-	) values ($1, $2, $3, $4, $5, $6, $7)
-	returning id
-	`
-
-	ctx, cancel := DBQueryContext()
-	defer cancel()
-
-	err := r.db.QueryRow(ctx, stmt,
-		mo.MerchantID,
-		mo.Sender,
-		mo.Body,
-		mo.ClientTransactionID,
-		mo.NotificationURL,
-		mo.CreatedAt,
-		mo.UpdatedAt,
-	).Scan(&insertedID)
+	stmt, args, err := DBQueryBuilder().Insert("message_orders").
+		Columns(
+			"merchant_id",
+			"sender",
+			"body",
+			"client_transaction_id",
+			"notification_url",
+			"created_at",
+			"updated_at",
+		).
+		Values(
+			mo.MerchantID,
+			mo.Sender,
+			mo.Body,
+			mo.ClientTransactionID,
+			mo.NotificationURL,
+			mo.CreatedAt,
+			mo.UpdatedAt,
+		).
+		Suffix(`RETURNING "id"`).ToSql()
 	if err != nil {
-		return r.wrapError(err)
+		return err
 	}
 
-	mo.ID = insertedID
+	if err = DBQueryGet(r.db, &mo.ID, stmt, args...); err != nil {
+		return r.wrapError(err)
+	}
 
 	return nil
 }
 
 func (r *MessageOrderRepo) FindByID(id string) (*models.MessageOrder, error) {
-	stmt := selectMessageOrdersBase + "where id = $1"
+	stmt, args, err := r.selectMessageOrdersBase().Where("id = ?", id).ToSql()
+	if err != nil {
+		return nil, err
+	}
 
-	return r.querySingle(stmt, id)
+	return r.querySingle(stmt, args...)
 }
 
 func (r *MessageOrderRepo) FindByMerchantAndID(merchantID, id string) (*models.MessageOrder, error) {
-	stmt := selectMessageOrdersBase + "where merchant_id = $1 AND id = $2"
+	stmt, args, err := r.selectMessageOrdersBase().Where("merchant_id = ? AND id = ?", merchantID, id).ToSql()
+	if err != nil {
+		return nil, err
+	}
 
-	return r.querySingle(stmt, merchantID, id)
+	return r.querySingle(stmt, args...)
 }
 
 func (r *MessageOrderRepo) FindByQuery(q *inputs.MessageOrderSearchParams) ([]*models.MessageOrder, error) {
-	stmt := selectMessageOrdersBase
-	args := make([]interface{}, 0)
+	sb := r.selectMessageOrdersBase()
 
-	args = append(args, q.MerchantID)
-	stmt += fmt.Sprintf("where merchant_id = $%d\n", len(args))
+	sb = sb.Where("merchant_id = ?", q.MerchantID)
 
 	if q.ClientTransactionID != nil {
-		args = append(args, q.ClientTransactionID)
-		stmt += fmt.Sprintf("and client_transaction_id = $%d\n", len(args))
+		sb = sb.Where("client_transaction_id = ?", q.ClientTransactionID)
 	}
 
-	stmt, args = appendSearchParams(q.SearchParams, stmt, args)
+	sb = appendSearchParams(q.SearchParams, sb)
+
+	stmt, args, err := sb.ToSql()
+	if err != nil {
+		return nil, err
+	}
 
 	return r.query(stmt, args...)
 }
@@ -93,70 +95,39 @@ func (r *MessageOrderRepo) FindByQuery(q *inputs.MessageOrderSearchParams) ([]*m
 func (r *MessageOrderRepo) query(stmt string, args ...interface{}) ([]*models.MessageOrder, error) {
 	orders := []*models.MessageOrder{}
 
-	ctx, cancel := DBQueryContext()
-	defer cancel()
+	err := DBQuerySelect(r.db, &orders, stmt, args...)
 
-	rows, err := r.db.Query(ctx, stmt, args...)
-	if err != nil {
-		return nil, err
-	}
-
-	defer rows.Close()
-
-	for rows.Next() {
-		var mo models.MessageOrder
-
-		err = r.scanMessageOrder(rows, &mo)
-		if err != nil {
-			return nil, err
-		}
-
-		orders = append(orders, &mo)
-	}
-
-	return orders, nil
+	return orders, err
 }
 
 func (r *MessageOrderRepo) querySingle(stmt string, args ...interface{}) (*models.MessageOrder, error) {
-	ctx, cancel := DBQueryContext()
-	defer cancel()
+	var order models.MessageOrder
 
-	row := r.db.QueryRow(ctx, stmt, args...)
+	err := DBQueryGet(r.db, &order, stmt, args...)
 
-	var mo models.MessageOrder
-
-	err := r.scanMessageOrder(row, &mo)
-
-	switch {
-	case errors.Is(err, pgx.ErrNoRows):
-		return nil, models.ErrNotFound
-	case err == nil:
-		return &mo, nil
-	default:
-		return nil, err
-	}
-}
-
-func (r *MessageOrderRepo) scanMessageOrder(row pgx.Row, mo *models.MessageOrder) error {
-	return row.Scan(
-		&mo.ID,
-		&mo.MerchantID,
-		&mo.Sender,
-		&mo.Body,
-		&mo.ClientTransactionID,
-		&mo.NotificationURL,
-		&mo.CreatedAt,
-		&mo.UpdatedAt,
-	)
+	return &order, err
 }
 
 func (r *MessageOrderRepo) wrapError(err error) error {
 	var pgerr *pgconn.PgError
 	if errors.As(err, &pgerr) {
 		if pgerr.ConstraintName == constraintNameClientTransactionID {
-			return models.ErrDuplicateProviderMessageID
+			return models.ErrDuplicateClientTransactionID
 		}
 	}
 
 	return err
+}
+
+func (r *MessageOrderRepo) selectMessageOrdersBase() sq.SelectBuilder {
+	return DBQueryBuilder().Select(
+		"id",
+		"merchant_id",
+		"sender",
+		"body",
+		"client_transaction_id",
+		"notification_url",
+		"created_at",
+		"updated_at",
+	).From("message_orders")
 }

@@ -3,11 +3,12 @@ package models
 import (
 	"errors"
 	"regexp"
-	"strconv"
 	"strings"
+
+	"euromoby.com/smsgw/internal/utils"
 )
 
-type MSISDN int64
+type MSISDN uint64
 
 var (
 	msisdnRegex      = regexp.MustCompile(`^(\+|00)?([1-9]\d{7,14})$`)
@@ -15,7 +16,7 @@ var (
 )
 
 func (msisdn MSISDN) String() string {
-	return strconv.FormatInt(int64(msisdn), 10) //nolint:gomnd
+	return utils.FormatUint64(uint64(msisdn))
 }
 
 func stringToMSISDN(s string) (MSISDN, error) {
@@ -23,7 +24,7 @@ func stringToMSISDN(s string) (MSISDN, error) {
 		return 0, ErrInvalidMSISDN
 	}
 
-	msisdn, err := strconv.ParseInt(s, 10, 64) //nolint:gomnd
+	msisdn, err := utils.ParseUint64(s)
 	if err != nil {
 		return 0, ErrInvalidMSISDN
 	}

@@ -103,7 +103,7 @@ func (r *InboundMessageRepo) FindByQuery(q *inputs.InboundMessageSearchParams) (
 	stmt += fmt.Sprintf("where shortcode = $%d\n", len(args))
 
 	stmt, args = appendMessageParams(q.MessageParams, stmt, args)
-	stmt, args = appendSearchParams(q.SearchParams, stmt, args)
+	//stmt, args = appendSearchParams(q.SearchParams, stmt, args)
 
 	return r.query(stmt, args...)
 }

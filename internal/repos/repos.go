@@ -5,7 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	sq "github.com/Masterminds/squirrel"
+	"github.com/georgysavva/scany/pgxscan"
+
+	"euromoby.com/smsgw/internal/db"
 	"euromoby.com/smsgw/internal/inputs"
+	"euromoby.com/smsgw/internal/models"
 )
 
 const (
@@ -26,6 +31,29 @@ func DBTxContext() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), txTimeout)
 }
 
+func DBQueryGet(conn db.Conn, dst interface{}, query string, args ...interface{}) error {
+	ctx, cancel := DBQueryContext()
+	defer cancel()
+
+	err := pgxscan.Get(ctx, conn, dst, query, args...)
+	if pgxscan.NotFound(err) {
+		return models.ErrNotFound
+	}
+
+	return err
+}
+
+func DBQuerySelect(conn db.Conn, dst interface{}, query string, args ...interface{}) error {
+	ctx, cancel := DBQueryContext()
+	defer cancel()
+
+	return pgxscan.Select(ctx, conn, dst, query, args...)
+}
+
+func DBQueryBuilder() sq.StatementBuilderType {
+	return sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
+}
+
 func appendMessageParams(q *inputs.MessageParams, stmt string, args []interface{}) (string, []interface{}) {
 	if q.MSISDN != nil {
 		args = append(args, q.MSISDN)
@@ -40,19 +68,14 @@ func appendMessageParams(q *inputs.MessageParams, stmt string, args []interface{
 	return stmt, args
 }
 
-func appendSearchParams(q *inputs.SearchParams, stmt string, args []interface{}) (string, []interface{}) {
+func appendSearchParams(q *inputs.SearchParams, sb sq.SelectBuilder) sq.SelectBuilder {
 	if q.CreatedAtFrom != nil {
-		args = append(args, q.CreatedAtFrom)
-		stmt += fmt.Sprintf("and created_at >= $%d\n", len(args))
+		sb = sb.Where("and created_at >= ?", q.CreatedAtFrom)
 	}
 
 	if q.CreatedAtTo != nil {
-		args = append(args, q.CreatedAtTo)
-		stmt += fmt.Sprintf("and created_at <= $%d\n", len(args))
+		sb = sb.Where("and created_at <= ?", q.CreatedAtTo)
 	}
 
-	args = append(args, q.Limit, q.Offset)
-	stmt += fmt.Sprintf("order by created_at desc limit $%d offset $%d", len(args)-1, len(args))
-
-	return stmt, args
+	return sb.OrderBy("created_at desc").Limit(q.Limit).Offset(q.Offset)
 }

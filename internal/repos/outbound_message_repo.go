@@ -122,7 +122,7 @@ func (r *OutboundMessageRepo) FindByQuery(q *inputs.OutboundMessageSearchParams)
 	stmt += fmt.Sprintf("where merchant_id = $%d\n", len(args))
 
 	stmt, args = appendMessageParams(q.MessageParams, stmt, args)
-	stmt, args = appendSearchParams(q.SearchParams, stmt, args)
+	// stmt, args = appendSearchParams(q.SearchParams, stmt, args)
 
 	return r.query(stmt, args...)
 }

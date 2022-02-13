@@ -13,7 +13,7 @@ var tables = []string{ //nolint:gochecknoglobals
 	"message_orders",
 	"outbound_messages",
 	"inbound_messages",
-	"inbound_notifications",
+	"delivery_notifications",
 }
 
 const execTimeout = 2 * time.Second
