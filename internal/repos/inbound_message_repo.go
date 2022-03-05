@@ -52,7 +52,11 @@ func (r *InboundMessageRepo) Save(im *models.InboundMessage) error {
 		).
 		Suffix(`RETURNING "id"`)
 
-	return dbQuerySingle(r.db, &im.ID, sb)
+	if err := dbQuerySingle(r.db, &im.ID, sb); err != nil {
+		return r.wrapError(err)
+	}
+
+	return nil
 }
 
 func (r *InboundMessageRepo) Update(im *models.InboundMessage) error {

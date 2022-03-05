@@ -33,13 +33,11 @@ func (h *InboundHandler) Get(c *gin.Context) {
 
 	message, err := h.service.FindByShortcodeAndID(p.Shortcode, p.ID)
 	if err != nil {
-		views.ErrorJSON(c, http.StatusInternalServerError, err)
-
-		return
-	}
-
-	if message == nil {
-		views.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
+		if errors.Is(err, models.ErrNotFound) {
+			views.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
+		} else {
+			views.ErrorJSON(c, http.StatusInternalServerError, err)
+		}
 
 		return
 	}
@@ -59,17 +57,14 @@ func (h *InboundHandler) Ack(c *gin.Context) {
 
 	m, err := h.service.AckByShortcodeAndID(p.Shortcode, p.ID)
 	if err != nil {
-		if errors.Is(err, models.ErrAlreadyAcked) {
+		switch {
+		case errors.Is(err, models.ErrAlreadyAcked):
 			c.JSON(http.StatusConflict, m)
-		} else {
+		case errors.Is(err, models.ErrNotFound):
+			views.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
+		default:
 			views.ErrorJSON(c, http.StatusInternalServerError, err)
 		}
-
-		return
-	}
-
-	if m == nil {
-		views.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
 
 		return
 	}

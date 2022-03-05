@@ -3,15 +3,19 @@ package utils
 import (
 	"os"
 	"strconv"
+
+	"euromoby.com/smsgw/internal/logger"
 )
 
 // GetEnv returns ENV variable or fallbacks to default.
-func GetEnv(key, fallback string) string {
+func GetEnv(key string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value
 	}
 
-	return fallback
+	logger.Fatalw("missing env variable", "key", key)
+
+	return ""
 }
 
 func ParseInt64(s string) (int64, error) {

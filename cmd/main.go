@@ -15,6 +15,8 @@ func main() {
 	defer stop()
 
 	app := config.NewAppConfig()
+	logger.Infow("Starting", "app", app.AppName, "version", app.Version)
+
 	startAPIServer(app)
 	startWorkers(app)
 

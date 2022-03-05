@@ -43,29 +43,16 @@ func (w *OutboundDeliveryWorker) Run() (bool, error) {
 
 	notification, err := notificationRepo.FindOneForProcessing(models.MessageTypeOutbound)
 	if err != nil {
-		return false, err
-	}
+		if errors.Is(err, models.ErrNotFound) {
+			return false, nil
+		}
 
-	if notification == nil {
-		return false, nil
+		return false, err
 	}
 
 	logger.Infow("worker found new notification for processing", "worker", w.Name(), "delivery", notification)
 
-	message, messageOrder, err := w.findMessageWithOrder(tx, notification.MessageID)
-	if err != nil {
-		return false, err
-	}
-
-	if message == nil {
-		logger.Errorw("message not found", "worker", w.Name(), "sms", message)
-
-		notification.Status = models.DeliveryNotificationStatusFailed
-	} else {
-		w.sendToMerchant(notification, messageOrder, message)
-	}
-
-	if err = notificationRepo.Update(notification); err != nil {
+	if err = w.processNotification(tx, notification); err != nil {
 		return false, err
 	}
 
@@ -74,6 +61,27 @@ func (w *OutboundDeliveryWorker) Run() (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (w *OutboundDeliveryWorker) processNotification(tx db.Conn, notification *models.DeliveryNotification) error {
+	notificationRepo := repos.NewDeliveryNotificationRepo(tx)
+
+	message, messageOrder, err := w.findMessageWithOrder(tx, notification.MessageID)
+	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			logger.Errorw("message not found", "worker", w.Name(), "sms", message)
+
+			notification.Status = models.DeliveryNotificationStatusFailed
+
+			return notificationRepo.Update(notification)
+		}
+
+		return err
+	}
+
+	w.sendToMerchant(notification, messageOrder, message)
+
+	return notificationRepo.Update(notification)
 }
 
 func (w *OutboundDeliveryWorker) findMessageWithOrder(tx db.Conn, id string) (*models.OutboundMessage, *models.MessageOrder, error) {

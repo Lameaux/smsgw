@@ -30,17 +30,14 @@ func (h OutboundHandler) Ack(c *gin.Context) {
 
 	m, err := h.service.AckByProviderAndMessageID(SandboxProviderID, p.MessageID)
 	if err != nil {
-		if errors.Is(err, models.ErrAlreadyAcked) {
+		switch {
+		case errors.Is(err, models.ErrAlreadyAcked):
 			c.JSON(http.StatusConflict, m)
-		} else {
+		case errors.Is(err, models.ErrNotFound):
+			views.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
+		default:
 			views.ErrorJSON(c, http.StatusInternalServerError, err)
 		}
-
-		return
-	}
-
-	if m == nil {
-		views.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
 
 		return
 	}

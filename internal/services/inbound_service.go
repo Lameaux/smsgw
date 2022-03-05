@@ -63,10 +63,10 @@ func (s *InboundService) AckByShortcodeAndID(shortcode, id string) (*models.Inbo
 	defer tx.Rollback(ctx)
 
 	inboundMessageRepo := repos.NewInboundMessageRepo(tx)
-	message, err := inboundMessageRepo.FindByShortcodeAndID(shortcode, id)
 
-	if err != nil || message == nil {
-		return message, err
+	message, err := inboundMessageRepo.FindByShortcodeAndID(shortcode, id)
+	if err != nil {
+		return nil, err
 	}
 
 	if message.Status == models.InboundMessageStatusDelivered {

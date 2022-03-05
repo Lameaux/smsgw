@@ -9,6 +9,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/jackc/pgconn v1.10.1
 	github.com/jackc/pgx/v4 v4.14.1
+	github.com/joho/godotenv v1.4.0 // indirect
 	github.com/stretchr/testify v1.7.0
 	go.uber.org/zap v1.13.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c

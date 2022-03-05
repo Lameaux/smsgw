@@ -44,34 +44,16 @@ func (w *OutboundMessageWorker) Run() (bool, error) {
 
 	message, err := outboundMessageRepo.FindOneForProcessing()
 	if err != nil {
-		return false, err
-	}
+		if errors.Is(err, models.ErrNotFound) {
+			return false, nil
+		}
 
-	if message == nil {
-		return false, nil
+		return false, err
 	}
 
 	logger.Infow("worker found new message for processing", "worker", w.Name(), "sms", message)
 
-	messageOrderRepo := repos.NewMessageOrderRepo(tx)
-
-	messageOrder, err := messageOrderRepo.FindByID(message.MessageOrderID)
-	if err != nil {
-		return false, err
-	}
-
-	if messageOrder == nil {
-		logger.Errorw("message order is missing", "worker", w.Name(), "sms", message)
-		message.Status = models.OutboundMessageStatusFailed
-	} else {
-		w.sendToProvider(messageOrder, message)
-	}
-
-	if err = outboundMessageRepo.Update(message); err != nil {
-		return false, err
-	}
-
-	if err = w.sendNotification(tx, messageOrder, message); err != nil {
+	if err = w.processMessage(tx, message); err != nil {
 		return false, err
 	}
 
@@ -80,6 +62,31 @@ func (w *OutboundMessageWorker) Run() (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (w *OutboundMessageWorker) processMessage(tx db.Conn, message *models.OutboundMessage) error {
+	outboundMessageRepo := repos.NewOutboundMessageRepo(tx)
+	messageOrderRepo := repos.NewMessageOrderRepo(tx)
+
+	messageOrder, err := messageOrderRepo.FindByID(message.MessageOrderID)
+	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			logger.Errorw("message order is missing", "worker", w.Name(), "sms", message)
+			message.Status = models.OutboundMessageStatusFailed
+
+			return outboundMessageRepo.Update(message)
+		}
+
+		return err
+	}
+
+	w.sendToProvider(messageOrder, message)
+
+	if err = outboundMessageRepo.Update(message); err != nil {
+		return err
+	}
+
+	return w.sendNotification(tx, messageOrder, message)
 }
 
 func (w *OutboundMessageWorker) sendNotification(tx db.Conn, messageOrder *models.MessageOrder, message *models.OutboundMessage) error {

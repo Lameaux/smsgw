@@ -2,10 +2,12 @@ package config
 
 import (
 	"context"
+	"os"
 	"strconv"
 	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/joho/godotenv"
 
 	"euromoby.com/smsgw/internal/httpclient"
 	"euromoby.com/smsgw/internal/logger"
@@ -30,13 +32,6 @@ type AppConfig struct {
 }
 
 const (
-	defaultPort = "8080"
-
-	defaultWaitTimeout       = "15"
-	defaultConnectionTimeout = "5"
-	defaultTLSTimeout        = "5"
-	defaultReadTimeout       = "10"
-
 	dbPingTimeout = 2 * time.Second
 )
 
@@ -47,25 +42,35 @@ const (
 	TestMerchantID = "d70c94da-dac4-4c0c-a6db-97f1740f29aa"
 )
 
-func defaultAppConfig(databaseURI string) *AppConfig {
-	port := utils.GetEnv("PORT", defaultPort)
+func defaultAppConfig(env string) *AppConfig {
+	logger.Infow("loading env configuration", "env", env)
 
-	waitTimeout, err := strconv.Atoi(utils.GetEnv("WAIT_TIMEOUT", defaultWaitTimeout))
+	err := godotenv.Load(".env."+env, ".env")
+	if err != nil {
+		logger.Fatalw("failed to load env", "env", env, "error", err)
+
+		return nil
+	}
+
+	port := utils.GetEnv("PORT")
+	databaseURI := utils.GetEnv("DATABASE_URI")
+
+	waitTimeout, err := strconv.Atoi(utils.GetEnv("WAIT_TIMEOUT"))
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	connectionTimeout, err := strconv.Atoi(utils.GetEnv("CONNECTION_TIMEOUT", defaultConnectionTimeout))
+	connectionTimeout, err := strconv.Atoi(utils.GetEnv("CONNECTION_TIMEOUT"))
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	tlsTimeout, err := strconv.Atoi(utils.GetEnv("TLS_TIMEOUT", defaultTLSTimeout))
+	tlsTimeout, err := strconv.Atoi(utils.GetEnv("TLS_TIMEOUT"))
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	readTimeout, err := strconv.Atoi(utils.GetEnv("READ_TIMEOUT", defaultReadTimeout))
+	readTimeout, err := strconv.Atoi(utils.GetEnv("READ_TIMEOUT"))
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -91,18 +96,16 @@ func defaultAppConfig(databaseURI string) *AppConfig {
 }
 
 func NewAppConfig() *AppConfig {
-	databaseURI := utils.GetEnv("DATABASE_URI", "postgres://root:heslo@localhost:5432/smsgw_test?&pool_max_conns=10")
-	logger.Infow("Connecting to database", "database_uri", databaseURI)
+	env := os.Getenv("SMSGW_ENV")
+	if env == "" {
+		env = "development"
+	}
 
-	appConfig := defaultAppConfig(databaseURI)
-	logger.Infow("Starting", "app", appConfig.AppName, "version", appConfig.Version)
-
-	return appConfig
+	return defaultAppConfig(env)
 }
 
 func NewTestAppConfig() *AppConfig {
-	testDatabaseURI := utils.GetEnv("DATABASE_URI", "postgres://root:heslo@localhost:5432/smsgw_test?&pool_max_conns=10")
-	appConfig := defaultAppConfig(testDatabaseURI)
+	appConfig := defaultAppConfig("test")
 
 	// Add API Key for unit tests
 	appConfig.Merchants[TestAPIKey] = TestMerchantID
@@ -118,6 +121,8 @@ func (app *AppConfig) configureMerchants() {
 }
 
 func (app *AppConfig) configurePGXPool(uri string) {
+	logger.Infow("connecting to db", "database_uri", uri)
+
 	pool, err := pgxpool.Connect(context.Background(), uri)
 	if err != nil {
 		logger.Fatal(err)
@@ -143,10 +148,10 @@ func (app *AppConfig) configureHTTPClient() {
 }
 
 func (app *AppConfig) CloseDBPool() {
+	logger.Infow("closing db pool")
 	app.DBPool.Close()
 }
 
 func (app *AppConfig) Shutdown() {
-	logger.Infow("closing DB pool")
 	app.CloseDBPool()
 }

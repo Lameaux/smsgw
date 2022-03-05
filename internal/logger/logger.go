@@ -49,3 +49,7 @@ func Error(args ...interface{}) {
 func Fatal(args ...interface{}) {
 	Log().Fatal(args...)
 }
+
+func Fatalw(msg string, args ...interface{}) {
+	Log().Fatalw(msg, args...)
+}
