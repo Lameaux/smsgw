@@ -9,12 +9,16 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/joho/godotenv"
 
+	"euromoby.com/smsgw/internal/auth"
+	"euromoby.com/smsgw/internal/billing"
 	"euromoby.com/smsgw/internal/httpclient"
 	"euromoby.com/smsgw/internal/logger"
 	"euromoby.com/smsgw/internal/utils"
 )
 
 type AppConfig struct {
+	Env string
+
 	Port    string
 	AppName string
 	Version string
@@ -22,24 +26,21 @@ type AppConfig struct {
 	DBPool     *pgxpool.Pool
 	HTTPClient *httpclient.HTTPClient
 
-	Merchants   map[string]string
 	WorkerSleep time.Duration
 
 	WaitTimeout       time.Duration
 	ConnectionTimeout time.Duration
 	TLSTimeout        time.Duration
 	ReadTimeout       time.Duration
+
+	Auth    auth.Auth
+	Billing billing.Billing
 }
 
 const (
 	dbPingTimeout = 2 * time.Second
-)
 
-const defaultWorkerSleep = 5
-
-const (
-	TestAPIKey     = "test-api-key"
-	TestMerchantID = "d70c94da-dac4-4c0c-a6db-97f1740f29aa"
+	defaultWorkerSleep = 5
 )
 
 func defaultAppConfig(env string) *AppConfig {
@@ -76,6 +77,8 @@ func defaultAppConfig(env string) *AppConfig {
 	}
 
 	app := &AppConfig{
+		Env: env,
+
 		AppName: "smsgw",
 		Version: "0.1",
 		Port:    port,
@@ -89,8 +92,10 @@ func defaultAppConfig(env string) *AppConfig {
 	}
 
 	app.configureHTTPClient()
-	app.configureMerchants()
 	app.configurePGXPool(databaseURI)
+
+	app.configureAuth()
+	app.configureBilling()
 
 	return app
 }
@@ -105,19 +110,7 @@ func NewAppConfig() *AppConfig {
 }
 
 func NewTestAppConfig() *AppConfig {
-	appConfig := defaultAppConfig("test")
-
-	// Add API Key for unit tests
-	appConfig.Merchants[TestAPIKey] = TestMerchantID
-
-	return appConfig
-}
-
-func (app *AppConfig) configureMerchants() {
-	app.Merchants = map[string]string{
-		"postman-api-key": "d70c94da-dac4-4c0c-a6db-97f1740f29a8",
-		"apikey1":         "d70c94da-dac4-4c0c-a6db-97f1740f29a9",
-	}
+	return defaultAppConfig("test")
 }
 
 func (app *AppConfig) configurePGXPool(uri string) {
@@ -145,6 +138,18 @@ func (app *AppConfig) configureHTTPClient() {
 		TLSTimeout(app.TLSTimeout).
 		ReadTimeout(app.ReadTimeout).
 		Build()
+}
+
+func (app *AppConfig) configureAuth() {
+	if app.Env == "test" {
+		app.Auth = auth.NewTestAuth()
+	} else {
+		app.Auth = auth.NewStubAuth()
+	}
+}
+
+func (app *AppConfig) configureBilling() {
+	app.Billing = billing.NewStubBilling()
 }
 
 func (app *AppConfig) CloseDBPool() {

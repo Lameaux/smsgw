@@ -26,8 +26,8 @@ func NewAuthenticator(appConfig *config.AppConfig) *Authenticator {
 	return &Authenticator{appConfig}
 }
 
-func (auth *Authenticator) Authenticate(c *gin.Context) {
-	merchant, err := auth.doAuthenticate(c.Request)
+func (a *Authenticator) Authenticate(c *gin.Context) {
+	merchant, err := a.doAuthenticate(c.Request)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusForbidden, err)
 
@@ -38,10 +38,9 @@ func (auth *Authenticator) Authenticate(c *gin.Context) {
 	c.Next()
 }
 
-func (auth *Authenticator) doAuthenticate(r *http.Request) (string, error) {
-	merchant, exists := auth.appConfig.Merchants[r.Header.Get(HeaderXApiKey)]
-
-	if !exists {
+func (a *Authenticator) doAuthenticate(r *http.Request) (string, error) {
+	merchant, err := a.appConfig.Auth.Authorize(r.Header.Get(HeaderXApiKey))
+	if err != nil {
 		return "", ErrUnauthorized
 	}
 

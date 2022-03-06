@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"testing"
 
-	"euromoby.com/smsgw/internal/config"
+	"euromoby.com/smsgw/internal/auth"
 	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/middlewares"
 	"euromoby.com/smsgw/internal/services"
@@ -29,7 +29,7 @@ func TestSendHandler_SendMessage(t *testing.T) {
 
 	recorder := performAuthRequest(h.SendMessage, http.MethodPost, "/", bytes.NewReader(s), header{
 		Key:   middlewares.HeaderXApiKey,
-		Value: config.TestAPIKey,
+		Value: auth.TestAPIKey,
 	})
 
 	if status := recorder.Code; status != http.StatusCreated {
