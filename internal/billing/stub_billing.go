@@ -7,6 +7,7 @@ import (
 
 type StubBilling struct {
 	Balances map[string]int64
+	Paid     map[string]bool
 }
 
 func NewStubBilling() *StubBilling {
@@ -15,7 +16,9 @@ func NewStubBilling() *StubBilling {
 		"d70c94da-dac4-4c0c-a6db-97f1740f29a9": 10, //nolint:gomnd
 	}
 
-	return &StubBilling{balances}
+	paid := map[string]bool{}
+
+	return &StubBilling{balances, paid}
 }
 
 func (b *StubBilling) CheckBalance(merchantID string) error {
@@ -29,7 +32,7 @@ func (b *StubBilling) CheckBalance(merchantID string) error {
 }
 
 func (b *StubBilling) ChargeOutboundMessage(message *models.OutboundMessage) error {
-	if message.AttemptCounter > 0 {
+	if b.Paid[message.ID] {
 		return nil
 	}
 
@@ -42,6 +45,8 @@ func (b *StubBilling) ChargeOutboundMessage(message *models.OutboundMessage) err
 	}
 
 	b.Balances[message.MerchantID] = balance - 1
+
+	b.Paid[message.ID] = true
 
 	return nil
 }
