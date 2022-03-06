@@ -11,6 +11,7 @@ import (
 
 const (
 	ApplicationJSON = "application/json"
+	userAgent       = "euromoby/smsgw"
 )
 
 type HTTPClient struct {
@@ -38,6 +39,7 @@ func (h *HTTPClient) SendWithContext(ctx context.Context, method string, url str
 		return nil, err
 	}
 
+	req.Header.Set("User-Agent", userAgent)
 	req.Header.Set("Content-Type", ApplicationJSON)
 
 	return h.c.Do(req)

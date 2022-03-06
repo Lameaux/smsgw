@@ -110,7 +110,13 @@ func NewAppConfig() *AppConfig {
 }
 
 func NewTestAppConfig() *AppConfig {
-	return defaultAppConfig("test")
+	utils.SetWorkingDir()
+
+	app := defaultAppConfig("test")
+
+	utils.CleanupDatabase(app.DBPool)
+
+	return app
 }
 
 func (app *AppConfig) configurePGXPool(uri string) {

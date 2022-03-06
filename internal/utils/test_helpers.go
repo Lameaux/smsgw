@@ -3,6 +3,9 @@ package utils
 import (
 	"context"
 	"fmt"
+	"os"
+	"path"
+	"runtime"
 	"time"
 
 	"euromoby.com/smsgw/internal/db"
@@ -17,6 +20,15 @@ var tables = []string{ //nolint:gochecknoglobals
 }
 
 const execTimeout = 2 * time.Second
+
+func SetWorkingDir() {
+	_, filename, _, _ := runtime.Caller(0) //nolint:dogsled
+	dir := path.Join(path.Dir(filename), "../..")
+
+	if err := os.Chdir(dir); err != nil {
+		panic(err)
+	}
+}
 
 func CleanupDatabase(db db.Conn) {
 	ctx, cancel := context.WithTimeout(context.Background(), execTimeout)

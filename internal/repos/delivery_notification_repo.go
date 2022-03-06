@@ -49,7 +49,7 @@ func (r *DeliveryNotificationRepo) Save(dn *models.DeliveryNotification) error {
 func (r *DeliveryNotificationRepo) Update(dn *models.DeliveryNotification) error {
 	dn.UpdatedAt = models.TimeNow()
 
-	sb := dbQueryBuilder().Update(tableNameOutboundMessages).SetMap(
+	sb := dbQueryBuilder().Update(tableNameDeliveryNotifications).SetMap(
 		map[string]interface{}{
 			"status":          dn.Status,
 			"last_response":   dn.LastResponse,
