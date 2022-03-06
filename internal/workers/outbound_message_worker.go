@@ -107,10 +107,17 @@ func (w *OutboundMessageWorker) sendNotification(tx db.Conn, messageOrder *model
 func (w *OutboundMessageWorker) sendToProvider(messageOrder *models.MessageOrder, message *models.OutboundMessage) {
 	connectorMessage := w.makeConnectorMessage(messageOrder, message)
 	connector := w.connectorsRepo.FindConnector(connectorMessage)
-	resp, err := connector.SendMessage(connectorMessage)
 
-	name := connector.Name()
-	message.ProviderID = &name
+	providerID := connector.Name()
+	message.ProviderID = &providerID
+
+	if err := w.app.Billing.ChargeOutboundMessage(message); err != nil {
+		w.handleFailure(message, nil, err)
+
+		return
+	}
+
+	resp, err := connector.SendMessage(connectorMessage)
 
 	if err != nil {
 		w.handleFailure(message, resp, err)
@@ -123,6 +130,12 @@ func (w *OutboundMessageWorker) handleFailure(message *models.OutboundMessage, r
 	switch {
 	case errors.Is(err, models.ErrSendFailed) || errors.Is(err, models.ErrInvalidJSON):
 		message.ProviderResponse = resp.Body
+	case errors.Is(err, models.ErrInsufficientFunds):
+		message.Status = models.OutboundMessageStatusFailed
+		errorText := err.Error()
+		message.ProviderResponse = &errorText
+
+		return
 	case errors.Is(err, models.ErrDeadLetter):
 		message.Status = models.OutboundMessageStatusFailed
 

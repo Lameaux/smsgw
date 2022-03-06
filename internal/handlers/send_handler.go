@@ -32,9 +32,12 @@ func (h *SendHandler) SendMessage(c *gin.Context) {
 
 	result, err := h.service.SendMessage(p)
 	if err != nil {
-		if errors.Is(err, models.ErrDuplicateClientTransactionID) {
+		switch {
+		case errors.Is(err, models.ErrDuplicateClientTransactionID):
 			c.JSON(http.StatusConflict, result)
-		} else {
+		case errors.Is(err, models.ErrInsufficientFunds):
+			views.ErrorJSON(c, http.StatusPaymentRequired, err)
+		default:
 			views.ErrorJSON(c, http.StatusInternalServerError, err)
 		}
 

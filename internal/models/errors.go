@@ -10,4 +10,5 @@ var (
 	ErrDuplicateProviderMessageID   = errors.New("message_id already exists")
 	ErrDuplicateClientTransactionID = errors.New("client_transaction_id already exists")
 	ErrNotFound                     = errors.New("not found")
+	ErrInsufficientFunds            = errors.New("insufficient funds")
 )

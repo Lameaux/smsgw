@@ -11,6 +11,6 @@ type ErrorResponse struct {
 }
 
 func ErrorJSON(c *gin.Context, code int, err error) {
-	logger.Errorw("unhandled error", "error", err)
+	logger.Errorw("api error", "error", err)
 	c.JSON(code, ErrorResponse{Error: err.Error()})
 }

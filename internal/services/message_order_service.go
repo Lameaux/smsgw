@@ -66,6 +66,10 @@ func (s *MessageOrderService) FindByQuery(p *inputs.MessageOrderSearchParams) ([
 }
 
 func (s *MessageOrderService) SendMessage(params *inputs.SendMessageParams) (*views.MessageOrderDetail, error) {
+	if err := s.app.Billing.CheckBalance(params.MerchantID); err != nil {
+		return nil, err
+	}
+
 	ctx, cancel := repos.DBTxContext()
 	defer cancel()
 
