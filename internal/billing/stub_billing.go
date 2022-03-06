@@ -12,7 +12,7 @@ type StubBilling struct {
 
 func NewStubBilling() *StubBilling {
 	balances := map[string]int64{
-		"d70c94da-dac4-4c0c-a6db-97f1740f29a8": 1,  //nolint:gomnd
+		"d70c94da-dac4-4c0c-a6db-97f1740f29a8": 1,
 		"d70c94da-dac4-4c0c-a6db-97f1740f29a9": 10, //nolint:gomnd
 	}
 

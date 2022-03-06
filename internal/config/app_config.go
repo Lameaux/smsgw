@@ -155,7 +155,11 @@ func (app *AppConfig) configureAuth() {
 }
 
 func (app *AppConfig) configureBilling() {
-	app.Billing = billing.NewStubBilling()
+	if app.Env == "test" {
+		app.Billing = billing.NewTestBilling()
+	} else {
+		app.Billing = billing.NewStubBilling()
+	}
 }
 
 func (app *AppConfig) CloseDBPool() {
