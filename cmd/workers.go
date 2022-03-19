@@ -7,7 +7,9 @@ import (
 
 	"euromoby.com/smsgw/internal/config"
 	"euromoby.com/smsgw/internal/logger"
+	"euromoby.com/smsgw/internal/models"
 	"euromoby.com/smsgw/internal/notifiers"
+	"euromoby.com/smsgw/internal/processors"
 	"euromoby.com/smsgw/internal/providers/connectors"
 	"euromoby.com/smsgw/internal/workers"
 )
@@ -27,8 +29,14 @@ func startWorkers(app *config.AppConfig) {
 	ow := workers.NewOutboundMessageWorker(app, c)
 	runners = append(runners, workers.NewRunner(ctx, ow))
 
-	n := notifiers.NewOutboundNotifier(app)
-	on := workers.NewOutboundDeliveryWorker(app, n)
+	n := notifiers.NewDefaultNotifier(app)
+
+	on := workers.NewDeliveryNotificationWorker(
+		"OutboundDeliveryWorker",
+		app,
+		models.MessageTypeOutbound,
+		processors.NewOutboundDeliveryProcessor(n),
+	)
 	runners = append(runners, workers.NewRunner(ctx, on))
 
 	for _, r := range runners {

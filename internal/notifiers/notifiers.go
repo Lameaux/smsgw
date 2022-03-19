@@ -1,5 +1,5 @@
 package notifiers
 
-type SendNotificationResponse struct {
+type NotifierResponse struct {
 	Body *string
 }

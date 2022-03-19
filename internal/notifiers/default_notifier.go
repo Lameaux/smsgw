@@ -9,16 +9,16 @@ import (
 	"euromoby.com/smsgw/internal/models"
 )
 
-type OutboundNotifier struct {
+type DefaultNotifier struct {
 	app *config.AppConfig
 }
 
-func NewOutboundNotifier(app *config.AppConfig) *OutboundNotifier {
-	return &OutboundNotifier{app}
+func NewDefaultNotifier(app *config.AppConfig) *DefaultNotifier {
+	return &DefaultNotifier{app}
 }
 
-func (on *OutboundNotifier) SendNotification(messageOrder *models.MessageOrder, message *models.OutboundMessage) (*SendNotificationResponse, error) {
-	httpResp, err := on.app.HTTPClient.Post(*messageOrder.NotificationURL, &message)
+func (dn *DefaultNotifier) SendNotification(notificationURL string, message interface{}) (*NotifierResponse, error) {
+	httpResp, err := dn.app.HTTPClient.Post(notificationURL, &message)
 	if err != nil {
 		return nil, err
 	}
@@ -31,11 +31,11 @@ func (on *OutboundNotifier) SendNotification(messageOrder *models.MessageOrder, 
 
 	respBody := string(respBodyBytes)
 
-	r := SendNotificationResponse{
+	r := NotifierResponse{
 		Body: &respBody,
 	}
 
-	if !on.Success(httpResp) {
+	if !dn.Success(httpResp) {
 		return &r, models.ErrSendFailed
 	}
 
@@ -44,6 +44,6 @@ func (on *OutboundNotifier) SendNotification(messageOrder *models.MessageOrder, 
 	return &r, nil
 }
 
-func (on *OutboundNotifier) Success(response *http.Response) bool {
+func (dn *DefaultNotifier) Success(response *http.Response) bool {
 	return response.StatusCode >= 200 && response.StatusCode < 300
 }
