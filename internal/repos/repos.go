@@ -6,6 +6,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/georgysavva/scany/pgxscan"
+	"github.com/jackc/pgx/v4"
 
 	"euromoby.com/smsgw/internal/db"
 	"euromoby.com/smsgw/internal/inputs"
@@ -32,6 +33,27 @@ func DBTxContext() (context.Context, context.CancelFunc) {
 
 func dbQueryContext() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), queryTimeout)
+}
+
+func Begin(conn db.Conn) (pgx.Tx, error) { //nolint:ireturn
+	ctx, cancel := DBTxContext()
+	defer cancel()
+
+	return conn.Begin(ctx)
+}
+
+func Rollback(tx pgx.Tx) error {
+	ctx, cancel := DBTxContext()
+	defer cancel()
+
+	return tx.Rollback(ctx)
+}
+
+func Commit(tx pgx.Tx) error {
+	ctx, cancel := DBTxContext()
+	defer cancel()
+
+	return tx.Commit(ctx)
 }
 
 func dbQuerySingle(conn db.Conn, dst interface{}, sb sqler) error {

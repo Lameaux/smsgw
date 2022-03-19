@@ -70,22 +70,18 @@ func (s *MessageOrderService) SendMessage(params *inputs.SendMessageParams) (*vi
 		return nil, err
 	}
 
-	ctx, cancel := repos.DBTxContext()
-	defer cancel()
-
-	tx, err := s.app.DBPool.Begin(ctx)
+	tx, err := repos.Begin(s.app.DBPool)
 	if err != nil {
 		return nil, err
 	}
 
-	defer tx.Rollback(ctx)
+	defer repos.Rollback(tx)
 
 	messageOrderRepo := repos.NewMessageOrderRepo(tx)
 
 	order := s.makeMessageOrder(params)
 
-	err = messageOrderRepo.Save(order)
-	if err != nil {
+	if err := messageOrderRepo.Save(order); err != nil {
 		return nil, err
 	}
 
@@ -105,7 +101,7 @@ func (s *MessageOrderService) SendMessage(params *inputs.SendMessageParams) (*vi
 		}
 	}
 
-	if err = tx.Commit(ctx); err != nil {
+	if err := repos.Commit(tx); err != nil {
 		return nil, err
 	}
 

@@ -45,15 +45,12 @@ func (s *OutboundService) FindByMerchantAndID(merchantID, id string) (*views.Out
 }
 
 func (s *OutboundService) AckByProviderAndMessageID(providerID, messageID string) (*models.OutboundMessage, error) {
-	ctx, cancel := repos.DBTxContext()
-	defer cancel()
-
-	tx, err := s.app.DBPool.Begin(ctx)
+	tx, err := repos.Begin(s.app.DBPool)
 	if err != nil {
 		return nil, err
 	}
 
-	defer tx.Rollback(ctx)
+	defer repos.Rollback(tx)
 
 	outboundMessageRepo := repos.NewOutboundMessageRepo(tx)
 
@@ -75,8 +72,7 @@ func (s *OutboundService) AckByProviderAndMessageID(providerID, messageID string
 
 	message.Status = models.OutboundMessageStatusDelivered
 
-	err = outboundMessageRepo.Update(message)
-	if err != nil {
+	if err := outboundMessageRepo.Update(message); err != nil {
 		return nil, err
 	}
 
@@ -90,7 +86,7 @@ func (s *OutboundService) AckByProviderAndMessageID(providerID, messageID string
 		}
 	}
 
-	if err = tx.Commit(ctx); err != nil {
+	if err := repos.Commit(tx); err != nil {
 		return nil, err
 	}
 

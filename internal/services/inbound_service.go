@@ -52,15 +52,12 @@ func (s *InboundService) SaveMessage(m *models.InboundMessage) error {
 }
 
 func (s *InboundService) AckByShortcodeAndID(shortcode, id string) (*models.InboundMessage, error) {
-	ctx, cancel := repos.DBTxContext()
-	defer cancel()
-
-	tx, err := s.app.DBPool.Begin(ctx)
+	tx, err := repos.Begin(s.app.DBPool)
 	if err != nil {
 		return nil, err
 	}
 
-	defer tx.Rollback(ctx)
+	defer repos.Rollback(tx)
 
 	inboundMessageRepo := repos.NewInboundMessageRepo(tx)
 
@@ -75,8 +72,7 @@ func (s *InboundService) AckByShortcodeAndID(shortcode, id string) (*models.Inbo
 
 	message.Status = models.InboundMessageStatusDelivered
 
-	err = inboundMessageRepo.Update(message)
-	if err != nil {
+	if err := inboundMessageRepo.Update(message); err != nil {
 		return nil, err
 	}
 
@@ -84,12 +80,11 @@ func (s *InboundService) AckByShortcodeAndID(shortcode, id string) (*models.Inbo
 
 	n := models.MakeInboundDeliveryNotification(message)
 
-	err = notificationRepo.Save(n)
-	if err != nil {
+	if err := notificationRepo.Save(n); err != nil {
 		return nil, err
 	}
 
-	if err = tx.Commit(ctx); err != nil {
+	if err := repos.Commit(tx); err != nil {
 		return nil, err
 	}
 

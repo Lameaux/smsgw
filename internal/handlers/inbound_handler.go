@@ -24,8 +24,7 @@ func NewInboundHandler(service *services.InboundService) *InboundHandler {
 func (h *InboundHandler) Get(c *gin.Context) {
 	p := h.params(c)
 
-	err := h.service.ValidateShortcode(p.MerchantID, p.Shortcode)
-	if err != nil {
+	if err := h.service.ValidateShortcode(p.MerchantID, p.Shortcode); err != nil {
 		views.ErrorJSON(c, http.StatusForbidden, err)
 
 		return
@@ -48,8 +47,7 @@ func (h *InboundHandler) Get(c *gin.Context) {
 func (h *InboundHandler) Ack(c *gin.Context) {
 	p := h.params(c)
 
-	err := h.service.ValidateShortcode(p.MerchantID, p.Shortcode)
-	if err != nil {
+	if err := h.service.ValidateShortcode(p.MerchantID, p.Shortcode); err != nil {
 		views.ErrorJSON(c, http.StatusForbidden, err)
 
 		return
@@ -80,8 +78,7 @@ func (h *InboundHandler) Search(c *gin.Context) {
 		return
 	}
 
-	err = h.service.ValidateShortcode(p.MerchantID, p.Shortcode)
-	if err != nil {
+	if err := h.service.ValidateShortcode(p.MerchantID, p.Shortcode); err != nil {
 		views.ErrorJSON(c, http.StatusForbidden, err)
 
 		return

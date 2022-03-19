@@ -29,15 +29,12 @@ func NewOutboundDeliveryWorker(app *config.AppConfig, notifier *notifiers.Outbou
 }
 
 func (w *OutboundDeliveryWorker) Run() (bool, error) {
-	ctx, done := repos.DBTxContext()
-	defer done()
-
-	tx, err := w.app.DBPool.Begin(ctx)
+	tx, err := repos.Begin(w.app.DBPool)
 	if err != nil {
 		return false, err
 	}
 
-	defer tx.Rollback(ctx)
+	defer repos.Rollback(tx)
 
 	notificationRepo := repos.NewDeliveryNotificationRepo(tx)
 
@@ -52,11 +49,11 @@ func (w *OutboundDeliveryWorker) Run() (bool, error) {
 
 	logger.Infow("worker found new notification for processing", "worker", w.Name(), "delivery", notification)
 
-	if err = w.processNotification(tx, notification); err != nil {
+	if err := w.processNotification(tx, notification); err != nil {
 		return false, err
 	}
 
-	if err = tx.Commit(ctx); err != nil {
+	if err := repos.Commit(tx); err != nil {
 		return false, err
 	}
 

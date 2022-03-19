@@ -84,7 +84,7 @@ func (c *SandboxConnector) SendMessage(message *SendMessageRequest) (*SendMessag
 
 	var resp SandboxMessageResponse
 
-	if err = json.Unmarshal(respBodyBytes, &resp); err != nil {
+	if err := json.Unmarshal(respBodyBytes, &resp); err != nil {
 		return &r, models.ErrInvalidJSON
 	}
 

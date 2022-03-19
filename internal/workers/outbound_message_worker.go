@@ -30,15 +30,12 @@ func NewOutboundMessageWorker(app *config.AppConfig, connectorsRepo *connectors.
 }
 
 func (w *OutboundMessageWorker) Run() (bool, error) {
-	ctx, done := repos.DBTxContext()
-	defer done()
-
-	tx, err := w.app.DBPool.Begin(ctx)
+	tx, err := repos.Begin(w.app.DBPool)
 	if err != nil {
 		return false, err
 	}
 
-	defer tx.Rollback(ctx)
+	defer repos.Rollback(tx)
 
 	outboundMessageRepo := repos.NewOutboundMessageRepo(tx)
 
@@ -53,11 +50,11 @@ func (w *OutboundMessageWorker) Run() (bool, error) {
 
 	logger.Infow("worker found new message for processing", "worker", w.Name(), "sms", message)
 
-	if err = w.processMessage(tx, message); err != nil {
+	if err := w.processMessage(tx, message); err != nil {
 		return false, err
 	}
 
-	if err = tx.Commit(ctx); err != nil {
+	if err := repos.Commit(tx); err != nil {
 		return false, err
 	}
 
@@ -82,7 +79,7 @@ func (w *OutboundMessageWorker) processMessage(tx db.Conn, message *models.Outbo
 
 	w.sendToProvider(messageOrder, message)
 
-	if err = outboundMessageRepo.Update(message); err != nil {
+	if err := outboundMessageRepo.Update(message); err != nil {
 		return err
 	}
 

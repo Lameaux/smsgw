@@ -46,8 +46,7 @@ const (
 func defaultAppConfig(env string) *AppConfig {
 	logger.Infow("loading env configuration", "env", env)
 
-	err := godotenv.Load(".env."+env, ".env")
-	if err != nil {
+	if err := godotenv.Load(".env."+env, ".env"); err != nil {
 		logger.Fatalw("failed to load env", "env", env, "error", err)
 
 		return nil
@@ -130,8 +129,7 @@ func (app *AppConfig) configurePGXPool(uri string) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbPingTimeout)
 	defer cancel()
 
-	err = pool.Ping(ctx)
-	if err != nil {
+	if err := pool.Ping(ctx); err != nil {
 		logger.Fatal(err)
 	}
 
