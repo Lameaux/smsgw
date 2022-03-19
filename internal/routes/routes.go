@@ -29,12 +29,17 @@ func Gin(app *config.AppConfig) *gin.Engine { //nolint:funlen
 	inboundService := services.NewInboundService(app)
 	inbound := handlers.NewInboundHandler(inboundService)
 
-	cb := handlers.NewCallbackHandler(app)
+	icb := handlers.NewInboundCallbackHandler(app)
+	ocb := handlers.NewOutboundCallbackHandler(app)
 
 	auth := middlewares.NewAuthenticator(app)
 
-	m := r.Group("/v1/sms/messages")
-	m.Use(auth.Authenticate)
+	v1sms := r.Group("/v1/sms")
+
+	v1smsauth := r.Group("/v1/sms")
+	v1smsauth.Use(auth.Authenticate)
+
+	m := v1smsauth.Group("/messages")
 	{
 		m.POST("", send.SendMessage)
 
@@ -49,25 +54,23 @@ func Gin(app *config.AppConfig) *gin.Engine { //nolint:funlen
 		m.PUT("/inbound/:shortcode/:id/ack", inbound.Ack)
 	}
 
-	co := r.Group("/v1/sms/callbacks/outbound")
-	co.Use(auth.Authenticate)
+	co := v1smsauth.Group("/callbacks/outbound")
 	{
-		co.GET("", cb.ListCallbacks)
-		co.POST("", cb.RegisterCallback)
-		co.DELETE("/:id", cb.UnregisterCallback)
+		co.GET("", ocb.ListCallbacks)
+		co.POST("", ocb.RegisterCallback)
+		co.DELETE("/:id", ocb.UnregisterCallback)
 	}
 
-	ci := r.Group("/v1/sms/callbacks/inbound")
-	ci.Use(auth.Authenticate)
+	ci := v1smsauth.Group("/callbacks/inbound")
 	{
-		ci.GET("", cb.ListCallbacks)
-		ci.GET("/:shortcode", cb.ListCallbacks)
-		ci.POST("/:shortcode", cb.RegisterCallback)
-		ci.PUT("/:shortcode", cb.UpdateCallback)
-		ci.DELETE("/:shortcode", cb.UnregisterCallback)
+		ci.GET("", icb.ListCallbacks)
+		ci.GET("/:shortcode", icb.ListCallbacks)
+		ci.POST("/:shortcode", icb.RegisterCallback)
+		ci.PUT("/:shortcode", icb.UpdateCallback)
+		ci.DELETE("/:shortcode", icb.UnregisterCallback)
 	}
 
-	ps := r.Group("/v1/sms/providers/sandbox")
+	ps := v1sms.Group("/providers/sandbox")
 	{
 		sandbox.SetupRoutes(ps, inboundService, outboundService)
 	}

@@ -22,6 +22,7 @@ func (p *OutboundDeliveryProcessor) SendNotification(db db.Conn, notification *m
 	}
 
 	if messageOrder.NotificationURL == nil {
+		// TODO: check default callback
 		return nil, models.ErrMissingNotificationURL
 	}
 

@@ -92,6 +92,7 @@ func (w *OutboundMessageWorker) sendNotification(tx db.Conn, messageOrder *model
 	}
 
 	if messageOrder.NotificationURL == nil {
+		// TODO: check default callback
 		return nil
 	}
 
