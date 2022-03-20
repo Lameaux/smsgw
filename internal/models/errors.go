@@ -9,6 +9,7 @@ var (
 	ErrDeadLetter                   = errors.New("message can not be delivered")
 	ErrDuplicateProviderMessageID   = errors.New("message_id already exists")
 	ErrDuplicateClientTransactionID = errors.New("client_transaction_id already exists")
+	ErrDuplicateCallback            = errors.New("callback already exists")
 	ErrNotFound                     = errors.New("not found")
 	ErrMissingNotificationURL       = errors.New("missing notification url")
 	ErrInsufficientFunds            = errors.New("insufficient funds")
