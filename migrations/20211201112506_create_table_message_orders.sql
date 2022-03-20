@@ -1,7 +1,5 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 CREATE TABLE "message_orders" (
     "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     "merchant_id" uuid NOT NULL,

@@ -16,7 +16,7 @@ func NewInboundCallbackHandler(appConfig *config.AppConfig) *InboundCallbackHand
 	return &InboundCallbackHandler{appConfig}
 }
 
-func (mc InboundCallbackHandler) ListCallbacks(c *gin.Context) {
+func (mc InboundCallbackHandler) GetCallback(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 

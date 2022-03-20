@@ -56,18 +56,18 @@ func Gin(app *config.AppConfig) *gin.Engine { //nolint:funlen
 
 	co := v1smsauth.Group("/callbacks/outbound")
 	{
-		co.GET("", ocb.ListCallbacks)
+		co.GET("", ocb.GetCallback)
 		co.POST("", ocb.RegisterCallback)
-		co.DELETE("/:id", ocb.UnregisterCallback)
+		co.PUT("", ocb.UpdateCallback)
+		co.DELETE("", ocb.UnregisterCallback)
 	}
 
-	ci := v1smsauth.Group("/callbacks/inbound")
+	ci := v1smsauth.Group("/callbacks/inbound/:shortcode")
 	{
-		ci.GET("", icb.ListCallbacks)
-		ci.GET("/:shortcode", icb.ListCallbacks)
-		ci.POST("/:shortcode", icb.RegisterCallback)
-		ci.PUT("/:shortcode", icb.UpdateCallback)
-		ci.DELETE("/:shortcode", icb.UnregisterCallback)
+		ci.GET("", icb.GetCallback)
+		ci.POST("", icb.RegisterCallback)
+		ci.PUT("", icb.RegisterCallback)
+		ci.DELETE("", icb.UnregisterCallback)
 	}
 
 	ps := v1sms.Group("/providers/sandbox")

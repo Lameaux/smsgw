@@ -16,11 +16,15 @@ func NewOutboundCallbackHandler(appConfig *config.AppConfig) *OutboundCallbackHa
 	return &OutboundCallbackHandler{appConfig}
 }
 
-func (mc OutboundCallbackHandler) ListCallbacks(c *gin.Context) {
+func (mc OutboundCallbackHandler) GetCallback(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
 func (mc OutboundCallbackHandler) RegisterCallback(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{})
+}
+
+func (mc OutboundCallbackHandler) UpdateCallback(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
