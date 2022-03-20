@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"euromoby.com/smsgw/internal/auth"
 	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/middlewares"
 	"euromoby.com/smsgw/internal/models"
@@ -15,16 +16,17 @@ import (
 
 type InboundHandler struct {
 	service *services.InboundService
+	auth    auth.Auth
 }
 
-func NewInboundHandler(service *services.InboundService) *InboundHandler {
-	return &InboundHandler{service}
+func NewInboundHandler(service *services.InboundService, auth auth.Auth) *InboundHandler {
+	return &InboundHandler{service, auth}
 }
 
 func (h *InboundHandler) Get(c *gin.Context) {
 	p := h.params(c)
 
-	if err := h.service.ValidateShortcode(p.MerchantID, p.Shortcode); err != nil {
+	if err := h.auth.ValidateShortcode(p.MerchantID, p.Shortcode); err != nil {
 		views.ErrorJSON(c, http.StatusForbidden, err)
 
 		return
@@ -33,7 +35,7 @@ func (h *InboundHandler) Get(c *gin.Context) {
 	message, err := h.service.FindByShortcodeAndID(p.Shortcode, p.ID)
 	if err != nil {
 		if errors.Is(err, models.ErrNotFound) {
-			views.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
+			views.ErrorJSON(c, http.StatusNotFound, models.ErrMessageNotFound)
 		} else {
 			views.ErrorJSON(c, http.StatusInternalServerError, err)
 		}
@@ -47,7 +49,7 @@ func (h *InboundHandler) Get(c *gin.Context) {
 func (h *InboundHandler) Ack(c *gin.Context) {
 	p := h.params(c)
 
-	if err := h.service.ValidateShortcode(p.MerchantID, p.Shortcode); err != nil {
+	if err := h.auth.ValidateShortcode(p.MerchantID, p.Shortcode); err != nil {
 		views.ErrorJSON(c, http.StatusForbidden, err)
 
 		return
@@ -59,7 +61,7 @@ func (h *InboundHandler) Ack(c *gin.Context) {
 		case errors.Is(err, models.ErrAlreadyAcked):
 			c.JSON(http.StatusConflict, m)
 		case errors.Is(err, models.ErrNotFound):
-			views.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
+			views.ErrorJSON(c, http.StatusNotFound, models.ErrMessageNotFound)
 		default:
 			views.ErrorJSON(c, http.StatusInternalServerError, err)
 		}
@@ -78,7 +80,7 @@ func (h *InboundHandler) Search(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.ValidateShortcode(p.MerchantID, p.Shortcode); err != nil {
+	if err := h.auth.ValidateShortcode(p.MerchantID, p.Shortcode); err != nil {
 		views.ErrorJSON(c, http.StatusForbidden, err)
 
 		return

@@ -27,3 +27,7 @@ func (a *TestAuth) Authorize(apiKey string) (string, error) {
 
 	return merchant, nil
 }
+
+func (a *TestAuth) ValidateShortcode(merchantID, shortcode string) error {
+	return nil
+}

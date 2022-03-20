@@ -5,20 +5,20 @@ import (
 )
 
 type InboundCallback struct {
-	ID              string    `json:"id"`
-	Shortcode       string    `json:"shortcode"`
-	NotificationURL string    `json:"notification_url"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	ID        string    `json:"id"`
+	Shortcode string    `json:"-"`
+	URL       string    `json:"url"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
-func NewSimpleInboundCallback(shortcode string, notificationURL string) *InboundCallback {
+func NewSimpleInboundCallback(shortcode string, url string) *InboundCallback {
 	now := TimeNow()
 
 	return &InboundCallback{
-		Shortcode:       shortcode,
-		NotificationURL: notificationURL,
-		CreatedAt:       now,
-		UpdatedAt:       now,
+		Shortcode: shortcode,
+		URL:       url,
+		CreatedAt: now,
+		UpdatedAt: now,
 	}
 }

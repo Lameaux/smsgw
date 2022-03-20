@@ -27,13 +27,13 @@ func (r *OutboundCallbackRepo) Save(callback *models.OutboundCallback) error {
 	sb := dbQueryBuilder().Insert(tableNameOutboundCallbacks).
 		Columns(
 			"merchant_id",
-			"notification_url",
+			"url",
 			"created_at",
 			"updated_at",
 		).
 		Values(
 			callback.MerchantID,
-			callback.NotificationURL,
+			callback.URL,
 			callback.CreatedAt,
 			callback.UpdatedAt,
 		).
@@ -51,8 +51,8 @@ func (r *OutboundCallbackRepo) Update(callback *models.OutboundCallback) error {
 
 	sb := dbQueryBuilder().Update(tableNameOutboundCallbacks).SetMap(
 		map[string]interface{}{
-			"notification_url": callback.NotificationURL,
-			"updated_at":       callback.UpdatedAt,
+			"url":        callback.URL,
+			"updated_at": callback.UpdatedAt,
 		},
 	).Where("merchant_id = ?", callback.MerchantID)
 
@@ -81,7 +81,7 @@ func (r *OutboundCallbackRepo) selectBase() sq.SelectBuilder {
 	return dbQueryBuilder().Select(
 		"id",
 		"merchant_id",
-		"notification_url",
+		"url",
 		"created_at",
 		"updated_at",
 	).From(tableNameOutboundCallbacks)

@@ -13,4 +13,7 @@ var (
 	ErrNotFound                     = errors.New("not found")
 	ErrMissingNotificationURL       = errors.New("missing notification url")
 	ErrInsufficientFunds            = errors.New("insufficient funds")
+	ErrMessageNotFound              = errors.New("message not found")
+	ErrMessageOrderNotFound         = errors.New("message order not found")
+	ErrCallbackNotFound             = errors.New("callback not found")
 )

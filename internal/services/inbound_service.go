@@ -15,10 +15,6 @@ func NewInboundService(app *config.AppConfig) *InboundService {
 	return &InboundService{app}
 }
 
-func (s *InboundService) ValidateShortcode(merchantID, shortcode string) error {
-	return nil
-}
-
 func (s *InboundService) FindByShortcodeAndID(shortcode, id string) (*models.InboundMessage, error) {
 	ctx, cancel := repos.DBConnContext()
 	defer cancel()

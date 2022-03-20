@@ -3,7 +3,7 @@
 CREATE TABLE "outbound_callbacks" (
     "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     "merchant_id" uuid NOT NULL,
-    "notification_url" text NOT NULL,
+    "url" text NOT NULL,
     "created_at" timestamp NOT NULL,
     "updated_at" timestamp NOT NULL
 );

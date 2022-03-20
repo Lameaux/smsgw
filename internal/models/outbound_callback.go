@@ -5,20 +5,20 @@ import (
 )
 
 type OutboundCallback struct {
-	ID              string    `json:"id"`
-	MerchantID      string    `json:"-"`
-	NotificationURL string    `json:"notification_url"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	ID         string    `json:"id"`
+	MerchantID string    `json:"-"`
+	URL        string    `json:"url"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
-func NewSimpleOutboundCallback(merchantID string, notificationURL string) *OutboundCallback {
+func NewSimpleOutboundCallback(merchantID string, url string) *OutboundCallback {
 	now := TimeNow()
 
 	return &OutboundCallback{
-		MerchantID:      merchantID,
-		NotificationURL: notificationURL,
-		CreatedAt:       now,
-		UpdatedAt:       now,
+		MerchantID: merchantID,
+		URL:        url,
+		CreatedAt:  now,
+		UpdatedAt:  now,
 	}
 }

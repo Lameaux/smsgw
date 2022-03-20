@@ -25,14 +25,12 @@ func (h *StatusHandler) Get(c *gin.Context) {
 	p := h.params(c)
 
 	orderStatus, err := h.service.FindByMerchantAndID(p.MerchantID, p.ID)
-	if errors.Is(err, models.ErrNotFound) {
-		views.ErrorJSON(c, http.StatusNotFound, ErrMessageOrderNotFound)
-
-		return
-	}
-
 	if err != nil {
-		views.ErrorJSON(c, http.StatusInternalServerError, err)
+		if errors.Is(err, models.ErrNotFound) {
+			views.ErrorJSON(c, http.StatusNotFound, models.ErrMessageOrderNotFound)
+		} else {
+			views.ErrorJSON(c, http.StatusInternalServerError, err)
+		}
 
 		return
 	}

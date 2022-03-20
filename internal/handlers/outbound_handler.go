@@ -25,14 +25,12 @@ func (h *OutboundHandler) Get(c *gin.Context) {
 	p := h.params(c)
 
 	messageDetail, err := h.service.FindByMerchantAndID(p.MerchantID, p.ID)
-	if errors.Is(err, models.ErrNotFound) {
-		views.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
-
-		return
-	}
-
 	if err != nil {
-		views.ErrorJSON(c, http.StatusInternalServerError, err)
+		if errors.Is(err, models.ErrNotFound) {
+			views.ErrorJSON(c, http.StatusNotFound, models.ErrMessageNotFound)
+		} else {
+			views.ErrorJSON(c, http.StatusInternalServerError, err)
+		}
 
 		return
 	}

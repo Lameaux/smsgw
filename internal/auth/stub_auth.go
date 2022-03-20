@@ -23,3 +23,7 @@ func (a *StubAuth) Authorize(apiKey string) (string, error) {
 
 	return merchant, nil
 }
+
+func (a *StubAuth) ValidateShortcode(merchantID, shortcode string) error {
+	return nil
+}
