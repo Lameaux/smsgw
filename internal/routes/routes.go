@@ -49,9 +49,9 @@ func Gin(app *config.AppConfig) *gin.Engine { //nolint:funlen
 		m.GET("/outbound/search", outbound.Search)
 		m.GET("/outbound/:id", outbound.Get)
 
-		m.GET("/inbound/:shortcode/search", inbound.Search)
-		m.GET("/inbound/:shortcode/:id", inbound.Get)
-		m.PUT("/inbound/:shortcode/:id/ack", inbound.Ack)
+		m.GET("/inbound/search", inbound.Search)
+		m.GET("/inbound/:id", inbound.Get)
+		m.PUT("/inbound/:id/ack", inbound.Ack)
 	}
 
 	co := v1smsauth.Group("/callbacks/outbound")
@@ -62,11 +62,11 @@ func Gin(app *config.AppConfig) *gin.Engine { //nolint:funlen
 		co.DELETE("", ocb.UnregisterCallback)
 	}
 
-	ci := v1smsauth.Group("/callbacks/inbound/:shortcode")
+	ci := v1smsauth.Group("/callbacks/inbound")
 	{
-		ci.GET("", icb.GetCallback)
+		ci.GET("", icb.ListCallbacks)
 		ci.POST("", icb.RegisterCallback)
-		ci.PUT("", icb.RegisterCallback)
+		ci.PUT("", icb.UpdateCallback)
 		ci.DELETE("", icb.UnregisterCallback)
 	}
 

@@ -13,6 +13,7 @@ const (
 
 type InboundMessage struct {
 	ID                string               `json:"id"`
+	MerchantID        string               `json:"-"`
 	Shortcode         string               `json:"shortcode"`
 	Status            InboundMessageStatus `json:"status"`
 	MSISDN            MSISDN               `json:"msisdn"`

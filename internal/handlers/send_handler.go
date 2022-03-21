@@ -18,6 +18,10 @@ type SendHandler struct {
 	service *services.MessageOrderService
 }
 
+const (
+	MAX_RECIPIENTS = 50
+)
+
 func NewSendHandler(service *services.MessageOrderService) *SendHandler {
 	return &SendHandler{service}
 }
@@ -60,14 +64,24 @@ func (h *SendHandler) parseRequest(c *gin.Context) (*inputs.SendMessageParams, e
 
 	p.MerchantID = c.GetString(middlewares.MerchantIDKey)
 
+	if p.Body == "" {
+		return nil, models.ErrEmptyBody
+	}
+
+	if len(p.To) == 0 {
+		return nil, models.ErrMissingRecipients
+	}
+
 	recipients, err := h.normalizeRecipients(p.To)
 	if err != nil {
 		return nil, err
 	}
 
-	p.Recipients = recipients
+	if len(recipients) > MAX_RECIPIENTS {
+		return nil, models.ErrMaxRecipients
+	}
 
-	// TODO: validate more inputs
+	p.Recipients = recipients
 
 	return &p, nil
 }

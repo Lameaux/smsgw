@@ -6,9 +6,13 @@ type StubAuth struct {
 	Merchants map[string]string
 }
 
+const (
+	PostmanMerchantID = "d70c94da-dac4-4c0c-a6db-97f1740f29a8"
+)
+
 func NewStubAuth() *StubAuth {
 	merchants := map[string]string{
-		"postman-api-key": "d70c94da-dac4-4c0c-a6db-97f1740f29a8",
+		"postman-api-key": PostmanMerchantID,
 		"apikey1":         "d70c94da-dac4-4c0c-a6db-97f1740f29a9",
 	}
 
@@ -24,6 +28,6 @@ func (a *StubAuth) Authorize(apiKey string) (string, error) {
 	return merchant, nil
 }
 
-func (a *StubAuth) ValidateShortcode(merchantID, shortcode string) error {
-	return nil
+func (a *StubAuth) FindMerchantByShortcode(shortcode string) (string, error) {
+	return PostmanMerchantID, nil
 }

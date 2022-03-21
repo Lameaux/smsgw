@@ -11,5 +11,5 @@ type InboundMessageSearchParams struct {
 	*MessageParams
 
 	MerchantID string
-	Shortcode  string
+	Shortcode  *string
 }

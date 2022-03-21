@@ -27,6 +27,7 @@ func NewInboundMessageRepo(db db.Conn) *InboundMessageRepo {
 func (r *InboundMessageRepo) Save(im *models.InboundMessage) error {
 	sb := dbQueryBuilder().Insert(tableNameInboundMessages).
 		Columns(
+			"merchant_id",
 			"shortcode",
 			"status",
 			"msisdn",
@@ -39,6 +40,7 @@ func (r *InboundMessageRepo) Save(im *models.InboundMessage) error {
 			"updated_at",
 		).
 		Values(
+			im.MerchantID,
 			im.Shortcode,
 			im.Status,
 			im.MSISDN,
@@ -72,11 +74,11 @@ func (r *InboundMessageRepo) Update(im *models.InboundMessage) error {
 	return dbExec(r.db, sb)
 }
 
-func (r *InboundMessageRepo) FindByShortcodeAndID(shortcode, id string) (*models.InboundMessage, error) {
+func (r *InboundMessageRepo) FindByMerchantAndID(merchantID, id string) (*models.InboundMessage, error) {
 	var msg models.InboundMessage
 
 	sb := r.selectBase().
-		Where("shortcode = ?", shortcode).
+		Where("merchant_id = ?", merchantID).
 		Where("id = ?", id)
 
 	err := dbQuerySingle(r.db, &msg, sb)
@@ -85,7 +87,11 @@ func (r *InboundMessageRepo) FindByShortcodeAndID(shortcode, id string) (*models
 }
 
 func (r *InboundMessageRepo) FindByQuery(q *inputs.InboundMessageSearchParams) ([]*models.InboundMessage, error) {
-	sb := r.selectBase().Where("shortcode = ?", q.Shortcode)
+	sb := r.selectBase().Where("merchant_id = ?", q.MerchantID)
+
+	if q.Shortcode != nil {
+		sb = sb.Where("shortcode = ?", q.Shortcode)
+	}
 
 	sb = appendMessageParams(q.MessageParams, sb)
 	sb = appendSearchParams(q.SearchParams, sb)
@@ -99,6 +105,7 @@ func (r *InboundMessageRepo) FindByQuery(q *inputs.InboundMessageSearchParams) (
 func (r *InboundMessageRepo) selectBase() sq.SelectBuilder {
 	return dbQueryBuilder().Select(
 		"id",
+		"merchant_id",
 		"shortcode",
 		"status",
 		"msisdn",

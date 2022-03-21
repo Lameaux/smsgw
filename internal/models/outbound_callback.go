@@ -5,7 +5,7 @@ import (
 )
 
 type OutboundCallback struct {
-	ID         string    `json:"id"`
+	ID         string    `json:"-"`
 	MerchantID string    `json:"-"`
 	URL        string    `json:"url"`
 	CreatedAt  time.Time `json:"created_at"`

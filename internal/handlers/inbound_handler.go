@@ -6,7 +6,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"euromoby.com/smsgw/internal/auth"
 	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/middlewares"
 	"euromoby.com/smsgw/internal/models"
@@ -16,23 +15,16 @@ import (
 
 type InboundHandler struct {
 	service *services.InboundService
-	auth    auth.Auth
 }
 
-func NewInboundHandler(service *services.InboundService, auth auth.Auth) *InboundHandler {
-	return &InboundHandler{service, auth}
+func NewInboundHandler(service *services.InboundService) *InboundHandler {
+	return &InboundHandler{service}
 }
 
 func (h *InboundHandler) Get(c *gin.Context) {
 	p := h.params(c)
 
-	if err := h.auth.ValidateShortcode(p.MerchantID, p.Shortcode); err != nil {
-		views.ErrorJSON(c, http.StatusForbidden, err)
-
-		return
-	}
-
-	message, err := h.service.FindByShortcodeAndID(p.Shortcode, p.ID)
+	message, err := h.service.FindByMerchantAndID(p.MerchantID, p.ID)
 	if err != nil {
 		if errors.Is(err, models.ErrNotFound) {
 			views.ErrorJSON(c, http.StatusNotFound, models.ErrMessageNotFound)
@@ -49,13 +41,7 @@ func (h *InboundHandler) Get(c *gin.Context) {
 func (h *InboundHandler) Ack(c *gin.Context) {
 	p := h.params(c)
 
-	if err := h.auth.ValidateShortcode(p.MerchantID, p.Shortcode); err != nil {
-		views.ErrorJSON(c, http.StatusForbidden, err)
-
-		return
-	}
-
-	m, err := h.service.AckByShortcodeAndID(p.Shortcode, p.ID)
+	m, err := h.service.AckByMerchantAndID(p.MerchantID, p.ID)
 	if err != nil {
 		switch {
 		case errors.Is(err, models.ErrAlreadyAcked):
@@ -80,12 +66,6 @@ func (h *InboundHandler) Search(c *gin.Context) {
 		return
 	}
 
-	if err := h.auth.ValidateShortcode(p.MerchantID, p.Shortcode); err != nil {
-		views.ErrorJSON(c, http.StatusForbidden, err)
-
-		return
-	}
-
 	messages, err := h.service.FindByQuery(p)
 	if err != nil {
 		views.ErrorJSON(c, http.StatusInternalServerError, err)
@@ -99,7 +79,6 @@ func (h *InboundHandler) Search(c *gin.Context) {
 func (h *InboundHandler) params(c *gin.Context) *inputs.InboundMessageParams {
 	return &inputs.InboundMessageParams{
 		MerchantID: c.GetString(middlewares.MerchantIDKey),
-		Shortcode:  c.Param("shortcode"),
 		ID:         c.Param("id"),
 	}
 }
@@ -117,9 +96,12 @@ func (h *InboundHandler) searchParams(c *gin.Context) (*inputs.InboundMessageSea
 
 	p := inputs.InboundMessageSearchParams{
 		MerchantID:    c.GetString(middlewares.MerchantIDKey),
-		Shortcode:     c.Param("shortcode"),
 		SearchParams:  sp,
 		MessageParams: mp,
+	}
+
+	if shortcode := c.Query("shortcode"); shortcode != "" {
+		p.Shortcode = &shortcode
 	}
 
 	return &p, nil

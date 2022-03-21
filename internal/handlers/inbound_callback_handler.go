@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 
 	"github.com/gin-gonic/gin"
 
-	"euromoby.com/smsgw/internal/auth"
 	"euromoby.com/smsgw/internal/config"
 	"euromoby.com/smsgw/internal/inputs"
 	"euromoby.com/smsgw/internal/middlewares"
@@ -17,37 +17,26 @@ import (
 )
 
 type InboundCallbackHandler struct {
-	appConfig *config.AppConfig
-	auth      auth.Auth
+	app *config.AppConfig
 }
 
-func NewInboundCallbackHandler(appConfig *config.AppConfig, auth auth.Auth) *InboundCallbackHandler {
-	return &InboundCallbackHandler{appConfig, auth}
+func NewInboundCallbackHandler(app *config.AppConfig) *InboundCallbackHandler {
+	return &InboundCallbackHandler{app}
 }
 
-func (h *InboundCallbackHandler) GetCallback(c *gin.Context) {
+func (h *InboundCallbackHandler) ListCallbacks(c *gin.Context) {
 	p := h.params(c)
 
-	if err := h.auth.ValidateShortcode(p.MerchantID, p.Shortcode); err != nil {
-		views.ErrorJSON(c, http.StatusForbidden, err)
+	repo := repos.NewInboundCallbackRepo(h.app.DBPool)
 
-		return
-	}
-
-	repo := repos.NewInboundCallbackRepo(h.appConfig.DBPool)
-
-	callback, err := repo.FindByShortcode(p.Shortcode)
+	callbacks, err := repo.FindByMerchant(p.MerchantID)
 	if err != nil {
-		if errors.Is(err, models.ErrNotFound) {
-			views.ErrorJSON(c, http.StatusNotFound, models.ErrCallbackNotFound)
-		} else {
-			views.ErrorJSON(c, http.StatusInternalServerError, err)
-		}
+		views.ErrorJSON(c, http.StatusInternalServerError, err)
 
 		return
 	}
 
-	c.JSON(http.StatusOK, callback)
+	c.JSON(http.StatusOK, callbacks)
 }
 
 func (h *InboundCallbackHandler) RegisterCallback(c *gin.Context) {
@@ -58,9 +47,12 @@ func (h *InboundCallbackHandler) RegisterCallback(c *gin.Context) {
 		return
 	}
 
-	callback := models.NewSimpleInboundCallback(p.Shortcode, p.URL)
+	callback := models.NewSimpleInboundCallback(p.MerchantID, p.Shortcode, p.URL)
+	h.doSaveCallback(c, callback)
+}
 
-	repo := repos.NewInboundCallbackRepo(h.appConfig.DBPool)
+func (h *InboundCallbackHandler) doSaveCallback(c *gin.Context, callback *models.InboundCallback) {
+	repo := repos.NewInboundCallbackRepo(h.app.DBPool)
 	if err := repo.Save(callback); err != nil {
 		if errors.Is(err, models.ErrDuplicateCallback) {
 			c.JSON(http.StatusConflict, callback)
@@ -71,23 +63,70 @@ func (h *InboundCallbackHandler) RegisterCallback(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, callback)
-
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusCreated, callback)
 }
 
 func (h *InboundCallbackHandler) UpdateCallback(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{})
+	p, err := h.parseRequest(c)
+	if err != nil {
+		views.ErrorJSON(c, http.StatusBadRequest, err)
+
+		return
+	}
+
+	repo := repos.NewInboundCallbackRepo(h.app.DBPool)
+
+	callback, err := repo.FindByMerchantAndShortcode(p.MerchantID, p.Shortcode)
+	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			callback = models.NewSimpleInboundCallback(p.MerchantID, p.Shortcode, p.URL)
+			h.doSaveCallback(c, callback)
+		} else {
+			views.ErrorJSON(c, http.StatusInternalServerError, err)
+		}
+
+		return
+	}
+
+	callback.URL = p.URL
+
+	if err := repo.Update(callback); err != nil {
+		views.ErrorJSON(c, http.StatusBadRequest, err)
+
+		return
+	}
+
+	c.JSON(http.StatusOK, callback)
 }
 
 func (h *InboundCallbackHandler) UnregisterCallback(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{})
+	p := h.params(c)
+
+	repo := repos.NewInboundCallbackRepo(h.app.DBPool)
+
+	callback, err := repo.FindByMerchantAndShortcode(p.MerchantID, p.Shortcode)
+	if err != nil {
+		if errors.Is(err, models.ErrNotFound) {
+			views.ErrorJSON(c, http.StatusNotFound, models.ErrCallbackNotFound)
+		} else {
+			views.ErrorJSON(c, http.StatusInternalServerError, err)
+		}
+
+		return
+	}
+
+	if err := repo.Delete(callback); err != nil {
+		views.ErrorJSON(c, http.StatusInternalServerError, err)
+
+		return
+	}
+
+	c.JSON(http.StatusNoContent, struct{}{})
 }
 
 func (h *InboundCallbackHandler) params(c *gin.Context) *inputs.InboundCallbackParams {
 	return &inputs.InboundCallbackParams{
 		MerchantID: c.GetString(middlewares.MerchantIDKey),
-		Shortcode:  c.Param("shortcode"),
 	}
 }
 
@@ -98,6 +137,15 @@ func (h *InboundCallbackHandler) parseRequest(c *gin.Context) (*inputs.InboundCa
 	dec.DisallowUnknownFields()
 
 	if err := dec.Decode(p); err != nil {
+		return nil, err
+	}
+
+	if p.Shortcode == "" {
+		return nil, models.ErrInvalidShortcode
+	}
+
+	_, err := url.ParseRequestURI(p.URL)
+	if err != nil {
 		return nil, err
 	}
 

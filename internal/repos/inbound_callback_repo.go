@@ -15,8 +15,8 @@ type InboundCallbackRepo struct {
 }
 
 const (
-	constraintNameShortcode   = "inbound_callbacks_shortcode"
-	tableNameInboundCallbacks = "inbound_callbacks"
+	constraintNameMerchantIDShortcode = "inbound_callbacks_merchant_id_shortcode"
+	tableNameInboundCallbacks         = "inbound_callbacks"
 )
 
 func NewInboundCallbackRepo(db db.Conn) *InboundCallbackRepo {
@@ -26,12 +26,14 @@ func NewInboundCallbackRepo(db db.Conn) *InboundCallbackRepo {
 func (r *InboundCallbackRepo) Save(callback *models.InboundCallback) error {
 	sb := dbQueryBuilder().Insert(tableNameInboundCallbacks).
 		Columns(
+			"merchant_id",
 			"shortcode",
 			"url",
 			"created_at",
 			"updated_at",
 		).
 		Values(
+			callback.MerchantID,
 			callback.Shortcode,
 			callback.URL,
 			callback.CreatedAt,
@@ -54,7 +56,8 @@ func (r *InboundCallbackRepo) Update(callback *models.InboundCallback) error {
 			"url":        callback.URL,
 			"updated_at": callback.UpdatedAt,
 		},
-	).Where("shortcode = ?", callback.Shortcode)
+	).Where("merchant_id = ?", callback.MerchantID).
+		Where("shortcode = ?", callback.Shortcode)
 
 	return dbExec(r.db, sb)
 }
@@ -63,15 +66,26 @@ func (r *InboundCallbackRepo) Delete(callback *models.InboundCallback) error {
 	callback.UpdatedAt = models.TimeNow()
 
 	sb := dbQueryBuilder().Delete(tableNameInboundCallbacks).
+		Where("merchant_id = ?", callback.MerchantID).
 		Where("shortcode = ?", callback.Shortcode)
 
 	return dbExec(r.db, sb)
 }
 
-func (r *InboundCallbackRepo) FindByShortcode(shortcode string) (*models.InboundCallback, error) {
+func (r *InboundCallbackRepo) FindByMerchant(merchantID string) ([]*models.InboundCallback, error) {
+	sb := r.selectBase().Where("merchant_id = ?", merchantID)
+
+	callbacks := []*models.InboundCallback{}
+	err := dbQueryAll(r.db, &callbacks, sb)
+
+	return callbacks, err
+}
+
+func (r *InboundCallbackRepo) FindByMerchantAndShortcode(merchantID, shortcode string) (*models.InboundCallback, error) {
 	var callback models.InboundCallback
 
-	sb := r.selectBase().Where("shortcode", shortcode)
+	sb := r.selectBase().Where("merchant_id = ?", merchantID).
+		Where("shortcode = ?", shortcode)
 	err := dbQuerySingle(r.db, &callback, sb)
 
 	return &callback, err
@@ -80,6 +94,7 @@ func (r *InboundCallbackRepo) FindByShortcode(shortcode string) (*models.Inbound
 func (r *InboundCallbackRepo) selectBase() sq.SelectBuilder {
 	return dbQueryBuilder().Select(
 		"id",
+		"merchant_id",
 		"shortcode",
 		"url",
 		"created_at",
@@ -90,7 +105,7 @@ func (r *InboundCallbackRepo) selectBase() sq.SelectBuilder {
 func (r *InboundCallbackRepo) wrapError(err error) error {
 	var pgerr *pgconn.PgError
 	if errors.As(err, &pgerr) {
-		if pgerr.ConstraintName == constraintNameShortcode {
+		if pgerr.ConstraintName == constraintNameMerchantIDShortcode {
 			return models.ErrDuplicateCallback
 		}
 	}

@@ -28,7 +28,14 @@ func (h *InboundHandler) ReceiveMessage(c *gin.Context) {
 		return
 	}
 
-	m, err := h.makeInboundMessage(p)
+	merchantID, err := h.service.FindMerchantByShortcode(p.Shortcode)
+	if err != nil {
+		views.ErrorJSON(c, http.StatusBadRequest, err)
+
+		return
+	}
+
+	m, err := h.makeInboundMessage(merchantID, p)
 	if err != nil {
 		views.ErrorJSON(c, http.StatusBadRequest, err)
 
@@ -64,7 +71,7 @@ func (h *InboundHandler) parseRequest(r *http.Request) (*InboundMessage, error) 
 	return &p, nil
 }
 
-func (h *InboundHandler) makeInboundMessage(im *InboundMessage) (*models.InboundMessage, error) {
+func (h *InboundHandler) makeInboundMessage(merchantID string, im *InboundMessage) (*models.InboundMessage, error) {
 	now := models.TimeNow()
 
 	normalized, err := models.NormalizeMSISDN(im.MSISDN)
@@ -73,6 +80,7 @@ func (h *InboundHandler) makeInboundMessage(im *InboundMessage) (*models.Inbound
 	}
 
 	m := models.InboundMessage{
+		MerchantID:        merchantID,
 		Shortcode:         im.Shortcode,
 		MSISDN:            normalized,
 		Body:              im.Body,

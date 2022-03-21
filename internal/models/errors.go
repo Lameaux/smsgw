@@ -16,4 +16,8 @@ var (
 	ErrMessageNotFound              = errors.New("message not found")
 	ErrMessageOrderNotFound         = errors.New("message order not found")
 	ErrCallbackNotFound             = errors.New("callback not found")
+	ErrMaxRecipients                = errors.New("too many recipients")
+	ErrMissingRecipients            = errors.New("missing recipients")
+	ErrEmptyBody                    = errors.New("empty body")
+	ErrInvalidShortcode             = errors.New("invalid shortcode format")
 )

@@ -15,7 +15,11 @@ func NewInboundService(app *config.AppConfig) *InboundService {
 	return &InboundService{app}
 }
 
-func (s *InboundService) FindByShortcodeAndID(shortcode, id string) (*models.InboundMessage, error) {
+func (s *InboundService) FindMerchantByShortcode(shortcode string) (string, error) {
+	return s.app.Auth.FindMerchantByShortcode(shortcode)
+}
+
+func (s *InboundService) FindByMerchantAndID(merchantID, id string) (*models.InboundMessage, error) {
 	ctx, cancel := repos.DBConnContext()
 	defer cancel()
 
@@ -28,7 +32,7 @@ func (s *InboundService) FindByShortcodeAndID(shortcode, id string) (*models.Inb
 
 	inboundMessageRepo := repos.NewInboundMessageRepo(conn)
 
-	return inboundMessageRepo.FindByShortcodeAndID(shortcode, id)
+	return inboundMessageRepo.FindByMerchantAndID(merchantID, id)
 }
 
 func (s *InboundService) SaveMessage(m *models.InboundMessage) error {
@@ -47,7 +51,7 @@ func (s *InboundService) SaveMessage(m *models.InboundMessage) error {
 	return inboundMessageRepo.Save(m)
 }
 
-func (s *InboundService) AckByShortcodeAndID(shortcode, id string) (*models.InboundMessage, error) {
+func (s *InboundService) AckByMerchantAndID(merchantID, id string) (*models.InboundMessage, error) {
 	tx, err := repos.Begin(s.app.DBPool)
 	if err != nil {
 		return nil, err
@@ -57,7 +61,7 @@ func (s *InboundService) AckByShortcodeAndID(shortcode, id string) (*models.Inbo
 
 	inboundMessageRepo := repos.NewInboundMessageRepo(tx)
 
-	message, err := inboundMessageRepo.FindByShortcodeAndID(shortcode, id)
+	message, err := inboundMessageRepo.FindByMerchantAndID(merchantID, id)
 	if err != nil {
 		return nil, err
 	}

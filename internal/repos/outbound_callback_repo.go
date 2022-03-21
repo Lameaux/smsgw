@@ -71,7 +71,7 @@ func (r *OutboundCallbackRepo) Delete(callback *models.OutboundCallback) error {
 func (r *OutboundCallbackRepo) FindByMerchant(merchantID string) (*models.OutboundCallback, error) {
 	var callback models.OutboundCallback
 
-	sb := r.selectBase().Where("merchant_id", merchantID)
+	sb := r.selectBase().Where("merchant_id = ?", merchantID)
 	err := dbQuerySingle(r.db, &callback, sb)
 
 	return &callback, err
