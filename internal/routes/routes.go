@@ -15,9 +15,10 @@ import (
 
 	coremiddlewares "github.com/Lameaux/core/middlewares"
 	"github.com/Lameaux/smsgw/internal/config"
+	ils "github.com/Lameaux/smsgw/internal/inbound/listeners/sandbox"
 	ih "github.com/Lameaux/smsgw/internal/index/handlers"
 	"github.com/Lameaux/smsgw/internal/middlewares"
-	"github.com/Lameaux/smsgw/internal/providers/callbacks/sandbox"
+	ols "github.com/Lameaux/smsgw/internal/outbound/listeners/sandbox"
 )
 
 func Gin(app *config.App) *gin.Engine { //nolint:funlen
@@ -71,7 +72,8 @@ func Gin(app *config.App) *gin.Engine { //nolint:funlen
 
 	ps := v1sms.Group("/providers/sandbox")
 	{
-		sandbox.SetupRoutes(ps, inboundService, outboundService)
+		ils.Routes(ps, inboundService)
+		ols.Routes(ps, outboundService)
 	}
 
 	return r

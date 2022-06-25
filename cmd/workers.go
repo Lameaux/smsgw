@@ -3,17 +3,17 @@ package main
 import (
 	"context"
 	"github.com/Lameaux/smsgw/internal/billing"
-	"github.com/Lameaux/smsgw/internal/notifications"
 	nm "github.com/Lameaux/smsgw/internal/notifications/models"
-	op "github.com/Lameaux/smsgw/internal/outbound/processors"
-	ow "github.com/Lameaux/smsgw/internal/outbound/workers"
+	"github.com/Lameaux/smsgw/internal/notifications/notifiers/http"
+	deliveryworkers "github.com/Lameaux/smsgw/internal/notifications/workers/delivery"
+	odp "github.com/Lameaux/smsgw/internal/outbound/processors/delivery"
+	ows "github.com/Lameaux/smsgw/internal/outbound/workers/sending"
 
 	"golang.org/x/sync/errgroup"
 
 	"github.com/Lameaux/core/logger"
 	"github.com/Lameaux/smsgw/internal/config"
-	"github.com/Lameaux/smsgw/internal/notifications/notifiers"
-	"github.com/Lameaux/smsgw/internal/providers/connectors"
+	"github.com/Lameaux/smsgw/internal/outbound/connectors"
 
 	coreworkers "github.com/Lameaux/core/workers"
 )
@@ -30,16 +30,16 @@ func startWorkers(app *config.App) {
 	runners := make([]*coreworkers.Runner, 0)
 
 	c := connectors.NewConnectorRepository(app)
-	w := ow.NewMessageWorker(app, c, billing.NewStubBilling())
+	w := ows.NewWorker(app, c, billing.NewStubBilling())
 	runners = append(runners, coreworkers.NewRunner(ctx, w))
 
-	n := notifiers.NewDefaultNotifier(app)
+	n := http.NewNotifier(app)
 
-	on := notifications.NewWorker(
+	on := deliveryworkers.NewWorker(
 		"OutboundDeliveryWorker",
 		app,
 		nm.DeliveryNotificationOutbound,
-		op.NewDeliveryProcessor(n),
+		odp.NewProcessor(n),
 	)
 	runners = append(runners, coreworkers.NewRunner(ctx, on))
 
