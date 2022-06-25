@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"euromoby.com/smsgw/internal/config"
+	"euromoby.com/smsgw/internal/users"
 )
 
 const (
@@ -19,11 +19,11 @@ const (
 var ErrUnauthorized = errors.New("Unauthorized")
 
 type Authenticator struct {
-	appConfig *config.AppConfig
+	u users.Service
 }
 
-func NewAuthenticator(appConfig *config.AppConfig) *Authenticator {
-	return &Authenticator{appConfig}
+func NewAuthenticator(u users.Service) *Authenticator {
+	return &Authenticator{u}
 }
 
 func (a *Authenticator) Authenticate(c *gin.Context) {
@@ -39,7 +39,7 @@ func (a *Authenticator) Authenticate(c *gin.Context) {
 }
 
 func (a *Authenticator) doAuthenticate(r *http.Request) (string, error) {
-	merchant, err := a.appConfig.Auth.Authorize(r.Header.Get(HeaderXApiKey))
+	merchant, err := a.u.Authorize(r.Header.Get(HeaderXApiKey))
 	if err != nil {
 		return "", ErrUnauthorized
 	}

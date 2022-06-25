@@ -1,73 +1,63 @@
 package routes
 
 import (
+	"euromoby.com/smsgw/internal/billing"
+	"euromoby.com/smsgw/internal/inbound"
+	ohg "euromoby.com/smsgw/internal/outbound/handlers/group"
+	ohm "euromoby.com/smsgw/internal/outbound/handlers/message"
+	ohs "euromoby.com/smsgw/internal/outbound/handlers/send"
+	osg "euromoby.com/smsgw/internal/outbound/services/group"
+	osm "euromoby.com/smsgw/internal/outbound/services/message"
+	oss "euromoby.com/smsgw/internal/outbound/services/send"
+	"euromoby.com/smsgw/internal/users"
 	"github.com/gin-gonic/gin"
 
+	coremiddlewares "euromoby.com/core/middlewares"
 	"euromoby.com/smsgw/internal/config"
 	"euromoby.com/smsgw/internal/handlers"
 	"euromoby.com/smsgw/internal/middlewares"
 	"euromoby.com/smsgw/internal/providers/callbacks/sandbox"
-	"euromoby.com/smsgw/internal/services"
 )
 
-func Gin(app *config.AppConfig) *gin.Engine { //nolint:funlen
+func Gin(app *config.App) *gin.Engine { //nolint:funlen
 	r := gin.Default()
-	r.Use(middlewares.Timeout(app.WaitTimeout))
+	r.Use(coremiddlewares.Timeout(app.Config.WaitTimeout))
 
-	i := handlers.NewIndexHandler(app)
+	i := handlers.NewIndexHandler()
 
 	r.GET("/", i.Index)
 	r.GET("/health", i.Index)
 
-	messageOrderService := services.NewMessageOrderService(app)
-	send := handlers.NewSendHandler(messageOrderService)
-	status := handlers.NewStatusHandler(messageOrderService)
+	sendHandler := ohs.NewHandler(oss.NewService(app, billing.NewStubBilling()))
+	groupHandler := ohg.NewHandler(osg.NewService(app))
 
-	outboundService := services.NewOutboundService(app)
-	outbound := handlers.NewOutboundHandler(outboundService)
+	outboundService := osm.NewService(app)
+	outboundHandler := ohm.NewHandler(outboundService)
 
-	inboundService := services.NewInboundService(app)
-	inbound := handlers.NewInboundHandler(inboundService)
+	a := users.NewStubAuth()
 
-	icb := handlers.NewInboundCallbackHandler(app)
-	ocb := handlers.NewOutboundCallbackHandler(app)
-
-	auth := middlewares.NewAuthenticator(app)
+	inboundService := inbound.NewService(app, a)
+	inboundHandler := inbound.NewHandler(inboundService)
 
 	v1sms := r.Group("/v1/sms")
 
+	authenticator := middlewares.NewAuthenticator(a)
 	v1smsauth := r.Group("/v1/sms")
-	v1smsauth.Use(auth.Authenticate)
+	v1smsauth.Use(authenticator.Authenticate)
 
 	m := v1smsauth.Group("/messages")
 	{
-		m.POST("", send.SendMessage)
+		m.POST("", sendHandler.SendMessage)
 
-		m.GET("/status/search", status.Search)
-		m.GET("/status/:id", status.Get)
+		m.GET("/group/search", groupHandler.Search)
+		m.GET("/group/:id", groupHandler.Get)
 
-		m.GET("/outbound/search", outbound.Search)
-		m.GET("/outbound/:id", outbound.Get)
+		m.GET("/outbound/search", outboundHandler.Search)
+		m.GET("/outbound/:id", outboundHandler.Get)
 
-		m.GET("/inbound/search", inbound.Search)
-		m.GET("/inbound/:id", inbound.Get)
-		m.PUT("/inbound/:id/ack", inbound.Ack)
-	}
-
-	co := v1smsauth.Group("/callbacks/outbound")
-	{
-		co.GET("", ocb.GetCallback)
-		co.POST("", ocb.RegisterCallback)
-		co.PUT("", ocb.UpdateCallback)
-		co.DELETE("", ocb.UnregisterCallback)
-	}
-
-	ci := v1smsauth.Group("/callbacks/inbound")
-	{
-		ci.GET("", icb.ListCallbacks)
-		ci.POST("", icb.RegisterCallback)
-		ci.PUT("", icb.UpdateCallback)
-		ci.DELETE("", icb.UnregisterCallback)
+		m.GET("/inbound/search", inboundHandler.Search)
+		m.GET("/inbound/:id", inboundHandler.Get)
+		m.PUT("/inbound/:id/ack", inboundHandler.Ack)
 	}
 
 	ps := v1sms.Group("/providers/sandbox")

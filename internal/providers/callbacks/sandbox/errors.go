@@ -2,4 +2,6 @@ package sandbox
 
 import "errors"
 
-var ErrMessageNotFound = errors.New("message not found")
+var (
+	ErrMessageNotFound = errors.New("message not found")
+)

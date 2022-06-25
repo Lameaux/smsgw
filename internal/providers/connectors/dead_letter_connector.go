@@ -1,9 +1,5 @@
 package connectors
 
-import (
-	"euromoby.com/smsgw/internal/models"
-)
-
 type DeadLetterConnector struct {
 	name string
 }
@@ -23,9 +19,9 @@ func (c *DeadLetterConnector) Accept(message *SendMessageRequest) bool {
 }
 
 func (c *DeadLetterConnector) SendMessage(message *SendMessageRequest) (*SendMessageResponse, error) {
-	return nil, models.ErrDeadLetter
+	return nil, ErrDeadLetter
 }
 
 func (c *DeadLetterConnector) SendStatus(status *SendStatusRequest) (*SendStatusResponse, error) {
-	return nil, models.ErrDeadLetter
+	return nil, ErrDeadLetter
 }

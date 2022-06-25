@@ -1,8 +1,8 @@
 package billing
 
 import (
-	"euromoby.com/smsgw/internal/logger"
-	"euromoby.com/smsgw/internal/models"
+	"euromoby.com/core/logger"
+	om "euromoby.com/smsgw/internal/outbound/models"
 )
 
 type StubBilling struct {
@@ -25,13 +25,13 @@ func (b *StubBilling) CheckBalance(merchantID string) error {
 	logger.Infow("check balance", "merchant", merchantID)
 
 	if b.Balances[merchantID] <= 0 {
-		return models.ErrInsufficientFunds
+		return ErrInsufficientFunds
 	}
 
 	return nil
 }
 
-func (b *StubBilling) ChargeOutboundMessage(message *models.OutboundMessage) error {
+func (b *StubBilling) ChargeOutboundMessage(message *om.Message) error {
 	if b.Paid[message.ID] {
 		return nil
 	}
@@ -41,7 +41,7 @@ func (b *StubBilling) ChargeOutboundMessage(message *models.OutboundMessage) err
 	balance := b.Balances[message.MerchantID]
 
 	if balance <= 0 {
-		return models.ErrInsufficientFunds
+		return ErrInsufficientFunds
 	}
 
 	b.Balances[message.MerchantID] = balance - 1

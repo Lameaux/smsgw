@@ -1,8 +1,6 @@
 package billing
 
-import (
-	"euromoby.com/smsgw/internal/models"
-)
+import om "euromoby.com/smsgw/internal/outbound/models"
 
 type TestBilling struct{}
 
@@ -14,6 +12,6 @@ func (b *TestBilling) CheckBalance(merchantID string) error {
 	return nil
 }
 
-func (b *TestBilling) ChargeOutboundMessage(message *models.OutboundMessage) error {
+func (b *TestBilling) ChargeOutboundMessage(message *om.Message) error {
 	return nil
 }

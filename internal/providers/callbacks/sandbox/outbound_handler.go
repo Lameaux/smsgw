@@ -3,20 +3,21 @@ package sandbox
 import (
 	"encoding/json"
 	"errors"
+	om "euromoby.com/smsgw/internal/outbound/models"
+	osm "euromoby.com/smsgw/internal/outbound/services/message"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
-	"euromoby.com/smsgw/internal/models"
-	"euromoby.com/smsgw/internal/services"
-	"euromoby.com/smsgw/internal/views"
+	coremodels "euromoby.com/core/models"
+	"euromoby.com/core/views"
 )
 
 type OutboundHandler struct {
-	service *services.OutboundService
+	service *osm.Service
 }
 
-func NewOutboundHandler(service *services.OutboundService) *OutboundHandler {
+func NewOutboundHandler(service *osm.Service) *OutboundHandler {
 	return &OutboundHandler{service}
 }
 
@@ -31,9 +32,9 @@ func (h OutboundHandler) Ack(c *gin.Context) {
 	m, err := h.service.AckByProviderAndMessageID(SandboxProviderID, p.MessageID)
 	if err != nil {
 		switch {
-		case errors.Is(err, models.ErrAlreadyAcked):
+		case errors.Is(err, om.ErrAlreadyAcked):
 			c.JSON(http.StatusConflict, m)
-		case errors.Is(err, models.ErrNotFound):
+		case errors.Is(err, coremodels.ErrNotFound):
 			views.ErrorJSON(c, http.StatusNotFound, ErrMessageNotFound)
 		default:
 			views.ErrorJSON(c, http.StatusInternalServerError, err)

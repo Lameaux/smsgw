@@ -2,14 +2,15 @@ package handlers
 
 import (
 	"encoding/json"
+	"euromoby.com/smsgw/internal/testhelpers"
 	"net/http"
 	"testing"
 )
 
 func TestIndexHandler(t *testing.T) {
-	h := NewIndexHandler(TestAppConfig)
+	h := NewIndexHandler()
 
-	recorder := performAnonRequest(h.Index, http.MethodGet, "/", nil)
+	recorder := testhelpers.PerformAnonRequest(h.Index, http.MethodGet, "/", nil)
 
 	if status := recorder.Code; status != http.StatusOK {
 		t.Errorf("Handler returned wrong status code. Expected: %d. Got: %d.", http.StatusOK, status)

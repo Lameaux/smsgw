@@ -2,16 +2,20 @@ package main
 
 import (
 	"context"
+	"euromoby.com/smsgw/internal/billing"
+	"euromoby.com/smsgw/internal/notifications"
+	nm "euromoby.com/smsgw/internal/notifications/models"
+	op "euromoby.com/smsgw/internal/outbound/processors"
+	ow "euromoby.com/smsgw/internal/outbound/workers"
 
 	"golang.org/x/sync/errgroup"
 
+	"euromoby.com/core/logger"
 	"euromoby.com/smsgw/internal/config"
-	"euromoby.com/smsgw/internal/logger"
-	"euromoby.com/smsgw/internal/models"
-	"euromoby.com/smsgw/internal/notifiers"
-	"euromoby.com/smsgw/internal/processors"
+	"euromoby.com/smsgw/internal/notifications/notifiers"
 	"euromoby.com/smsgw/internal/providers/connectors"
-	"euromoby.com/smsgw/internal/workers"
+
+	coreworkers "euromoby.com/core/workers"
 )
 
 var (
@@ -19,25 +23,25 @@ var (
 	cancelWorkers context.CancelFunc //nolint:gochecknoglobals
 )
 
-func startWorkers(app *config.AppConfig) {
+func startWorkers(app *config.App) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancelWorkers = cancel
 
-	runners := make([]*workers.Runner, 0)
+	runners := make([]*coreworkers.Runner, 0)
 
 	c := connectors.NewConnectorRepository(app)
-	ow := workers.NewOutboundMessageWorker(app, c)
-	runners = append(runners, workers.NewRunner(ctx, ow))
+	w := ow.NewMessageWorker(app, c, billing.NewStubBilling())
+	runners = append(runners, coreworkers.NewRunner(ctx, w))
 
 	n := notifiers.NewDefaultNotifier(app)
 
-	on := workers.NewDeliveryNotificationWorker(
+	on := notifications.NewWorker(
 		"OutboundDeliveryWorker",
 		app,
-		models.MessageTypeOutbound,
-		processors.NewOutboundDeliveryProcessor(n),
+		nm.DeliveryNotificationOutbound,
+		op.NewDeliveryProcessor(n),
 	)
-	runners = append(runners, workers.NewRunner(ctx, on))
+	runners = append(runners, coreworkers.NewRunner(ctx, on))
 
 	for _, r := range runners {
 		r := r

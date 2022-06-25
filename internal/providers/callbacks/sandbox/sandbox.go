@@ -1,16 +1,16 @@
 package sandbox
 
 import (
+	"euromoby.com/smsgw/internal/inbound"
+	osm "euromoby.com/smsgw/internal/outbound/services/message"
 	"github.com/gin-gonic/gin"
-
-	"euromoby.com/smsgw/internal/services"
 )
 
 const (
 	SandboxProviderID = "sandbox"
 )
 
-func SetupRoutes(ps *gin.RouterGroup, inboundService *services.InboundService, outboundService *services.OutboundService) {
+func SetupRoutes(ps *gin.RouterGroup, inboundService *inbound.Service, outboundService *osm.Service) {
 	sandboxInbound := NewInboundHandler(inboundService)
 	sandboxOutbound := NewOutboundHandler(outboundService)
 

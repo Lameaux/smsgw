@@ -6,33 +6,31 @@ import (
 	"net/http"
 	"time"
 
+	"euromoby.com/core/logger"
 	"euromoby.com/smsgw/internal/config"
-	"euromoby.com/smsgw/internal/logger"
 	"euromoby.com/smsgw/internal/routes"
 )
 
-var srv *http.Server //nolint:gochecknoglobals
-
 const serverShutdownTimeout = 5 * time.Second
 
-func startAPIServer(app *config.AppConfig) {
-	srv = &http.Server{
-		Addr:    ":" + app.Port,
+func startAPIServer(app *config.App) *http.Server {
+	srv := &http.Server{
+		Addr:    ":" + app.Config.Port,
 		Handler: routes.Gin(app),
 	}
 
-	logger.Infow("starting server", "port", app.Port)
+	logger.Infow("starting server", "port", app.Config.Port)
 
-	// Initializing the server in a goroutine so that
-	// it won't block the graceful shutdown handling below
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logger.Fatal("listen: %s\n", err)
 		}
 	}()
+
+	return srv
 }
 
-func shutdownAPIServer() {
+func shutdownAPIServer(srv *http.Server) {
 	logger.Infow("shutting down API server")
 
 	ctx, cancel := context.WithTimeout(context.Background(), serverShutdownTimeout)

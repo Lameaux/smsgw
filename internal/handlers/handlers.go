@@ -5,16 +5,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	coremodels "euromoby.com/core/models"
+	"euromoby.com/core/utils"
 	"euromoby.com/smsgw/internal/inputs"
-	"euromoby.com/smsgw/internal/models"
-	"euromoby.com/smsgw/internal/utils"
 )
 
 const (
 	defaultLimit = 10
 )
 
-func queryParamUint64Default(c *gin.Context, param string, def uint64) (uint64, error) {
+func QueryParamUint64Default(c *gin.Context, param string, def uint64) (uint64, error) {
 	value := c.Query(param)
 	if value == "" {
 		return def, nil
@@ -28,7 +28,7 @@ func queryParamUint64Default(c *gin.Context, param string, def uint64) (uint64, 
 	return i, nil
 }
 
-func queryParamTime(c *gin.Context, param string) (*time.Time, error) {
+func QueryParamTime(c *gin.Context, param string) (*time.Time, error) {
 	value := c.Query(param)
 	if value == "" {
 		return nil, nil //nolint: nilnil
@@ -42,23 +42,23 @@ func queryParamTime(c *gin.Context, param string) (*time.Time, error) {
 	return &t, nil
 }
 
-func commonSearchParams(c *gin.Context) (*inputs.SearchParams, error) {
-	offset, err := queryParamUint64Default(c, "offset", 0)
+func CommonSearchParams(c *gin.Context) (*inputs.SearchParams, error) {
+	offset, err := QueryParamUint64Default(c, "offset", 0)
 	if err != nil {
 		return nil, err
 	}
 
-	limit, err := queryParamUint64Default(c, "limit", defaultLimit)
+	limit, err := QueryParamUint64Default(c, "limit", defaultLimit)
 	if err != nil {
 		return nil, err
 	}
 
-	createdAtFrom, err := queryParamTime(c, "created_at_from")
+	createdAtFrom, err := QueryParamTime(c, "created_at_from")
 	if err != nil {
 		return nil, err
 	}
 
-	createdAtTo, err := queryParamTime(c, "created_at_to")
+	createdAtTo, err := QueryParamTime(c, "created_at_to")
 	if err != nil {
 		return nil, err
 	}
@@ -73,11 +73,11 @@ func commonSearchParams(c *gin.Context) (*inputs.SearchParams, error) {
 	return &p, nil
 }
 
-func messageSearchParams(c *gin.Context) (*inputs.MessageParams, error) {
+func MessageSearchParams(c *gin.Context) (*inputs.MessageParams, error) {
 	p := inputs.MessageParams{}
 
 	if msisdn := c.Query("msisdn"); msisdn != "" {
-		normalized, err := models.NormalizeMSISDN(msisdn)
+		normalized, err := coremodels.NormalizeMSISDN(msisdn)
 		if err != nil {
 			return nil, err
 		}

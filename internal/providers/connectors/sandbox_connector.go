@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
+	"euromoby.com/core/logger"
+	coremodels "euromoby.com/core/models"
 	"euromoby.com/smsgw/internal/config"
-	"euromoby.com/smsgw/internal/logger"
-	"euromoby.com/smsgw/internal/models"
 )
 
 const (
@@ -16,7 +16,7 @@ const (
 )
 
 type SandboxConnector struct {
-	app          *config.AppConfig
+	app          *config.App
 	countryCodes []string
 }
 
@@ -31,7 +31,7 @@ type SandboxMessageResponse struct {
 	MessageID *string `json:"message_id"`
 }
 
-func NewSandboxConnector(app *config.AppConfig) *SandboxConnector {
+func NewSandboxConnector(app *config.App) *SandboxConnector {
 	return &SandboxConnector{
 		app:          app,
 		countryCodes: []string{"420", "357", "380"},
@@ -62,7 +62,7 @@ func (c *SandboxConnector) SendMessage(message *SendMessageRequest) (*SendMessag
 		ClientTransactionID: message.ClientTransactionID,
 	}
 
-	httpResp, err := c.app.HTTPClient.Post(apiBaseURL+"/message", &reqBody)
+	httpResp, err := c.app.Config.HTTPClient.Post(apiBaseURL+"/message", &reqBody)
 	if err != nil {
 		return nil, err
 	}
@@ -79,13 +79,13 @@ func (c *SandboxConnector) SendMessage(message *SendMessageRequest) (*SendMessag
 	}
 
 	if httpResp.StatusCode != http.StatusCreated {
-		return &r, models.ErrSendFailed
+		return &r, ErrSendFailed
 	}
 
 	var resp SandboxMessageResponse
 
 	if err := json.Unmarshal(respBodyBytes, &resp); err != nil {
-		return &r, models.ErrInvalidJSON
+		return &r, coremodels.ErrInvalidJSON
 	}
 
 	r.MessageID = resp.MessageID
@@ -96,5 +96,5 @@ func (c *SandboxConnector) SendMessage(message *SendMessageRequest) (*SendMessag
 }
 
 func (c *SandboxConnector) SendStatus(status *SendStatusRequest) (*SendStatusResponse, error) {
-	return nil, models.ErrSendFailed
+	return nil, ErrSendFailed
 }

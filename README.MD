@@ -38,15 +38,21 @@ goose postgres "user=root password=heslo dbname=smsgw_test" up
 
 - POST /v1/sms/messages
 
-- GET /v1/sms/messages/status/search
-- GET /v1/sms/messages/status/:id
+#### Check Message Group Status
+
+- GET /v1/sms/messages/group/search
+- GET /v1/sms/messages/group/:id
+
+#### Outbound Messages
 
 - GET /v1/sms/messages/outbound/search
 - GET /v1/sms/messages/outbound/:id
 
-- GET /v1/sms/messages/inbound/:shortcode/search
-- GET /v1/sms/messages/inbound/:shortcode/:id
-- PUT /v1/sms/messages/inbound/:shortcode/:id/ack
+#### Inbound Messages
+
+- GET /v1/sms/messages/inbound/search
+- GET /v1/sms/messages/inbound/:id
+- PUT /v1/sms/messages/inbound/:id/ack
 
 ### Sandbox
 

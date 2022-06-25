@@ -1,13 +1,14 @@
 package connectors
 
 import (
+	"euromoby.com/core/logger"
 	"euromoby.com/smsgw/internal/config"
-	"euromoby.com/smsgw/internal/logger"
-	"euromoby.com/smsgw/internal/models"
+
+	coremodels "euromoby.com/core/models"
 )
 
 type SendMessageRequest struct {
-	MSISDN              models.MSISDN
+	MSISDN              coremodels.MSISDN
 	Sender              string
 	Body                string
 	ClientTransactionID string
@@ -20,7 +21,7 @@ type SendMessageResponse struct {
 
 type SendStatusRequest struct {
 	MessageID           string
-	MSISDN              models.MSISDN
+	MSISDN              coremodels.MSISDN
 	Status              string
 	ClientTransactionID string
 }
@@ -40,7 +41,7 @@ type ConnectorRepository struct {
 	connectors map[string]Connector
 }
 
-func NewConnectorRepository(app *config.AppConfig) *ConnectorRepository {
+func NewConnectorRepository(app *config.App) *ConnectorRepository {
 	connectors := make(map[string]Connector)
 
 	sandboxConnector := NewSandboxConnector(app)

@@ -3,20 +3,22 @@ package sandbox
 import (
 	"encoding/json"
 	"errors"
+	"euromoby.com/smsgw/internal/inbound"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
-	"euromoby.com/smsgw/internal/models"
-	"euromoby.com/smsgw/internal/services"
-	"euromoby.com/smsgw/internal/views"
+	"euromoby.com/core/views"
+	"euromoby.com/smsgw/internal/inbound/models"
+
+	coremodels "euromoby.com/core/models"
 )
 
 type InboundHandler struct {
-	service *services.InboundService
+	service *inbound.Service
 }
 
-func NewInboundHandler(service *services.InboundService) *InboundHandler {
+func NewInboundHandler(service *inbound.Service) *InboundHandler {
 	return &InboundHandler{service}
 }
 
@@ -71,22 +73,22 @@ func (h *InboundHandler) parseRequest(r *http.Request) (*InboundMessage, error) 
 	return &p, nil
 }
 
-func (h *InboundHandler) makeInboundMessage(merchantID string, im *InboundMessage) (*models.InboundMessage, error) {
-	now := models.TimeNow()
+func (h *InboundHandler) makeInboundMessage(merchantID string, im *InboundMessage) (*models.Message, error) {
+	now := coremodels.TimeNow()
 
-	normalized, err := models.NormalizeMSISDN(im.MSISDN)
+	normalized, err := coremodels.NormalizeMSISDN(im.MSISDN)
 	if err != nil {
 		return nil, err
 	}
 
-	m := models.InboundMessage{
+	m := models.Message{
 		MerchantID:        merchantID,
 		Shortcode:         im.Shortcode,
 		MSISDN:            normalized,
 		Body:              im.Body,
 		ProviderID:        SandboxProviderID,
 		ProviderMessageID: im.MessageID,
-		Status:            models.InboundMessageStatusNew,
+		Status:            models.MessageStatusNew,
 		NextAttemptAt:     now,
 		AttemptCounter:    0,
 		CreatedAt:         now,

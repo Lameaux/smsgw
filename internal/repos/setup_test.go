@@ -7,13 +7,13 @@ import (
 	"euromoby.com/smsgw/internal/config"
 )
 
-var TestAppConfig *config.AppConfig //nolint:gochecknoglobals
+var TestApp *config.App //nolint:gochecknoglobals
 
 func TestMain(m *testing.M) {
-	TestAppConfig = config.NewTestAppConfig()
+	TestApp = config.NewTestApp()
 
 	os.Exit(func() int {
-		defer TestAppConfig.Shutdown()
+		defer TestApp.Config.Shutdown()
 
 		return m.Run()
 	}())

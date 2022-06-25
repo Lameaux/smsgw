@@ -1,8 +1,8 @@
 package billing
 
-import "euromoby.com/smsgw/internal/models"
+import om "euromoby.com/smsgw/internal/outbound/models"
 
 type Billing interface {
 	CheckBalance(merchantID string) error
-	ChargeOutboundMessage(message *models.OutboundMessage) error
+	ChargeOutboundMessage(message *om.Message) error
 }

@@ -9,7 +9,7 @@ import (
 )
 
 func TestGin(t *testing.T) {
-	app := config.NewTestAppConfig()
+	app := config.NewTestApp()
 
 	r := Gin(app)
 
