@@ -1,12 +1,12 @@
 package notifications
 
 import (
-	"euromoby.com/smsgw/internal/notifications/models"
+	"github.com/Lameaux/smsgw/internal/notifications/models"
 	sq "github.com/Masterminds/squirrel"
 
-	"euromoby.com/core/db"
-	coremodels "euromoby.com/core/models"
-	corerepos "euromoby.com/core/repos"
+	"github.com/Lameaux/core/db"
+	coremodels "github.com/Lameaux/core/models"
+	corerepos "github.com/Lameaux/core/repos"
 )
 
 const (

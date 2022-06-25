@@ -2,15 +2,15 @@ package inbound
 
 import (
 	"errors"
-	commonhandlers "euromoby.com/smsgw/internal/common/handlers"
+	commonhandlers "github.com/Lameaux/smsgw/internal/common/handlers"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
-	coremodels "euromoby.com/core/models"
-	"euromoby.com/core/views"
-	"euromoby.com/smsgw/internal/inbound/models"
-	"euromoby.com/smsgw/internal/middlewares"
+	coremodels "github.com/Lameaux/core/models"
+	"github.com/Lameaux/core/views"
+	"github.com/Lameaux/smsgw/internal/inbound/models"
+	"github.com/Lameaux/smsgw/internal/middlewares"
 )
 
 type Handler struct {

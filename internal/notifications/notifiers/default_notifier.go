@@ -4,9 +4,9 @@ import (
 	"io"
 	"net/http"
 
-	"euromoby.com/core/logger"
-	"euromoby.com/smsgw/internal/config"
-	nm "euromoby.com/smsgw/internal/notifications/models"
+	"github.com/Lameaux/core/logger"
+	"github.com/Lameaux/smsgw/internal/config"
+	nm "github.com/Lameaux/smsgw/internal/notifications/models"
 )
 
 type DefaultNotifier struct {

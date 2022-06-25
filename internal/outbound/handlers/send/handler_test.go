@@ -3,17 +3,17 @@ package send
 import (
 	"bytes"
 	"encoding/json"
-	"euromoby.com/smsgw/internal/billing"
-	"euromoby.com/smsgw/internal/config"
-	ois "euromoby.com/smsgw/internal/outbound/inputs/send"
-	"euromoby.com/smsgw/internal/outbound/outputs"
-	oss "euromoby.com/smsgw/internal/outbound/services/send"
-	"euromoby.com/smsgw/internal/testhelpers"
-	"euromoby.com/smsgw/internal/users"
+	"github.com/Lameaux/smsgw/internal/billing"
+	"github.com/Lameaux/smsgw/internal/config"
+	ois "github.com/Lameaux/smsgw/internal/outbound/inputs/send"
+	"github.com/Lameaux/smsgw/internal/outbound/outputs"
+	oss "github.com/Lameaux/smsgw/internal/outbound/services/send"
+	"github.com/Lameaux/smsgw/internal/testhelpers"
+	"github.com/Lameaux/smsgw/internal/users"
 	"net/http"
 	"testing"
 
-	"euromoby.com/smsgw/internal/middlewares"
+	"github.com/Lameaux/smsgw/internal/middlewares"
 )
 
 func TestSendHandler_SendMessage(t *testing.T) {

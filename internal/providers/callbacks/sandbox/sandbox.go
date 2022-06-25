@@ -1,8 +1,8 @@
 package sandbox
 
 import (
-	"euromoby.com/smsgw/internal/inbound"
-	osm "euromoby.com/smsgw/internal/outbound/services/message"
+	"github.com/Lameaux/smsgw/internal/inbound"
+	osm "github.com/Lameaux/smsgw/internal/outbound/services/message"
 	"github.com/gin-gonic/gin"
 )
 

@@ -1,13 +1,13 @@
 package group
 
 import (
-	corerepos "euromoby.com/core/repos"
-	"euromoby.com/smsgw/internal/config"
-	ig "euromoby.com/smsgw/internal/outbound/inputs/group"
-	"euromoby.com/smsgw/internal/outbound/models"
-	v "euromoby.com/smsgw/internal/outbound/outputs"
-	rg "euromoby.com/smsgw/internal/outbound/repos/group"
-	rm "euromoby.com/smsgw/internal/outbound/repos/message"
+	corerepos "github.com/Lameaux/core/repos"
+	"github.com/Lameaux/smsgw/internal/config"
+	ig "github.com/Lameaux/smsgw/internal/outbound/inputs/group"
+	"github.com/Lameaux/smsgw/internal/outbound/models"
+	v "github.com/Lameaux/smsgw/internal/outbound/outputs"
+	rg "github.com/Lameaux/smsgw/internal/outbound/repos/group"
+	rm "github.com/Lameaux/smsgw/internal/outbound/repos/message"
 )
 
 type Service struct {

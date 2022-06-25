@@ -1,15 +1,15 @@
 package send
 
 import (
-	coremodels "euromoby.com/core/models"
-	corerepos "euromoby.com/core/repos"
-	"euromoby.com/smsgw/internal/billing"
-	"euromoby.com/smsgw/internal/config"
-	ois "euromoby.com/smsgw/internal/outbound/inputs/send"
-	"euromoby.com/smsgw/internal/outbound/models"
-	"euromoby.com/smsgw/internal/outbound/outputs"
-	org "euromoby.com/smsgw/internal/outbound/repos/group"
-	orm "euromoby.com/smsgw/internal/outbound/repos/message"
+	coremodels "github.com/Lameaux/core/models"
+	corerepos "github.com/Lameaux/core/repos"
+	"github.com/Lameaux/smsgw/internal/billing"
+	"github.com/Lameaux/smsgw/internal/config"
+	ois "github.com/Lameaux/smsgw/internal/outbound/inputs/send"
+	"github.com/Lameaux/smsgw/internal/outbound/models"
+	"github.com/Lameaux/smsgw/internal/outbound/outputs"
+	org "github.com/Lameaux/smsgw/internal/outbound/repos/group"
+	orm "github.com/Lameaux/smsgw/internal/outbound/repos/message"
 )
 
 type Service struct {

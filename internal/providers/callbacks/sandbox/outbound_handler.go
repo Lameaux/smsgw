@@ -3,14 +3,14 @@ package sandbox
 import (
 	"encoding/json"
 	"errors"
-	om "euromoby.com/smsgw/internal/outbound/models"
-	osm "euromoby.com/smsgw/internal/outbound/services/message"
+	om "github.com/Lameaux/smsgw/internal/outbound/models"
+	osm "github.com/Lameaux/smsgw/internal/outbound/services/message"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
-	coremodels "euromoby.com/core/models"
-	"euromoby.com/core/views"
+	coremodels "github.com/Lameaux/core/models"
+	"github.com/Lameaux/core/views"
 )
 
 type OutboundHandler struct {

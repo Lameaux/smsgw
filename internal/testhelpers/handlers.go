@@ -1,13 +1,13 @@
 package testhelpers
 
 import (
-	"euromoby.com/smsgw/internal/users"
+	"github.com/Lameaux/smsgw/internal/users"
 	"io"
 	"net/http/httptest"
 
 	"github.com/gin-gonic/gin"
 
-	"euromoby.com/smsgw/internal/middlewares"
+	"github.com/Lameaux/smsgw/internal/middlewares"
 )
 
 type Header struct {

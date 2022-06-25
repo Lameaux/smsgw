@@ -1,12 +1,12 @@
 package processors
 
 import (
-	"euromoby.com/core/db"
-	nm "euromoby.com/smsgw/internal/notifications/models"
-	"euromoby.com/smsgw/internal/notifications/notifiers"
-	om "euromoby.com/smsgw/internal/outbound/models"
-	org "euromoby.com/smsgw/internal/outbound/repos/group"
-	orm "euromoby.com/smsgw/internal/outbound/repos/message"
+	"github.com/Lameaux/core/db"
+	nm "github.com/Lameaux/smsgw/internal/notifications/models"
+	"github.com/Lameaux/smsgw/internal/notifications/notifiers"
+	om "github.com/Lameaux/smsgw/internal/outbound/models"
+	org "github.com/Lameaux/smsgw/internal/outbound/repos/group"
+	orm "github.com/Lameaux/smsgw/internal/outbound/repos/message"
 )
 
 type DeliveryProcessor struct {

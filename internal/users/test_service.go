@@ -1,6 +1,6 @@
 package users
 
-import coremodels "euromoby.com/core/models"
+import coremodels "github.com/Lameaux/core/models"
 
 type TestService struct {
 	Merchants map[string]string

@@ -3,7 +3,7 @@ package repos
 import (
 	sq "github.com/Masterminds/squirrel"
 
-	commoninputs "euromoby.com/smsgw/internal/common/inputs"
+	commoninputs "github.com/Lameaux/smsgw/internal/common/inputs"
 )
 
 func AppendMessageParams(q *commoninputs.MessageParams, sb sq.SelectBuilder) sq.SelectBuilder {

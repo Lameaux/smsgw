@@ -1,16 +1,16 @@
 package message
 
 import (
-	corerepos "euromoby.com/core/repos"
-	"euromoby.com/smsgw/internal/config"
-	"euromoby.com/smsgw/internal/notifications"
-	nm "euromoby.com/smsgw/internal/notifications/models"
-	"euromoby.com/smsgw/internal/outbound/models"
-	"euromoby.com/smsgw/internal/outbound/outputs"
-	rg "euromoby.com/smsgw/internal/outbound/repos/group"
-	rm "euromoby.com/smsgw/internal/outbound/repos/message"
+	corerepos "github.com/Lameaux/core/repos"
+	"github.com/Lameaux/smsgw/internal/config"
+	"github.com/Lameaux/smsgw/internal/notifications"
+	nm "github.com/Lameaux/smsgw/internal/notifications/models"
+	"github.com/Lameaux/smsgw/internal/outbound/models"
+	"github.com/Lameaux/smsgw/internal/outbound/outputs"
+	rg "github.com/Lameaux/smsgw/internal/outbound/repos/group"
+	rm "github.com/Lameaux/smsgw/internal/outbound/repos/message"
 
-	im "euromoby.com/smsgw/internal/outbound/inputs/message"
+	im "github.com/Lameaux/smsgw/internal/outbound/inputs/message"
 )
 
 type Service struct {

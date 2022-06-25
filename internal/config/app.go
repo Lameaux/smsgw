@@ -4,8 +4,8 @@ import (
 	"os"
 	"time"
 
-	coreconfig "euromoby.com/core/config"
-	coretesting "euromoby.com/core/testing"
+	coreconfig "github.com/Lameaux/core/config"
+	coretesting "github.com/Lameaux/core/testing"
 )
 
 var tables = []string{ //nolint:gochecknoglobals

@@ -1,16 +1,16 @@
 package group
 
 import (
-	"euromoby.com/smsgw/internal/outbound/inputs/group"
+	"github.com/Lameaux/smsgw/internal/outbound/inputs/group"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"euromoby.com/smsgw/internal/outbound/models"
+	"github.com/Lameaux/smsgw/internal/outbound/models"
 
-	coremodels "euromoby.com/core/models"
-	commoninputs "euromoby.com/smsgw/internal/common/inputs"
+	coremodels "github.com/Lameaux/core/models"
+	commoninputs "github.com/Lameaux/smsgw/internal/common/inputs"
 )
 
 func TestRepo_Save(t *testing.T) {

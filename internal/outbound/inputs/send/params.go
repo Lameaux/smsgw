@@ -1,6 +1,6 @@
 package send
 
-import coremodels "euromoby.com/core/models"
+import coremodels "github.com/Lameaux/core/models"
 
 type Params struct {
 	MerchantID          string

@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"euromoby.com/smsgw/internal/testhelpers"
+	"github.com/Lameaux/smsgw/internal/testhelpers"
 	"net/http"
 	"testing"
 )

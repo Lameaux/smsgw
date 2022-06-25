@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"euromoby.com/smsgw/internal/config"
+	"github.com/Lameaux/smsgw/internal/config"
 )
 
 type Handler struct{}

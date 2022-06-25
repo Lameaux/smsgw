@@ -1,4 +1,4 @@
-module euromoby.com/smsgw
+module github.com/Lameaux/smsgw
 
 go 1.18
 

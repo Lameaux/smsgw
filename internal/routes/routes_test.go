@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"euromoby.com/smsgw/internal/config"
+	"github.com/Lameaux/smsgw/internal/config"
 )
 
 func TestGin(t *testing.T) {

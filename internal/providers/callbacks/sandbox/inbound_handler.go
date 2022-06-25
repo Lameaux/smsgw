@@ -3,15 +3,15 @@ package sandbox
 import (
 	"encoding/json"
 	"errors"
-	"euromoby.com/smsgw/internal/inbound"
+	"github.com/Lameaux/smsgw/internal/inbound"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
-	"euromoby.com/core/views"
-	"euromoby.com/smsgw/internal/inbound/models"
+	"github.com/Lameaux/core/views"
+	"github.com/Lameaux/smsgw/internal/inbound/models"
 
-	coremodels "euromoby.com/core/models"
+	coremodels "github.com/Lameaux/core/models"
 )
 
 type InboundHandler struct {

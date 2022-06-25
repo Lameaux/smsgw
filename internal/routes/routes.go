@@ -1,23 +1,23 @@
 package routes
 
 import (
-	coreconfig "euromoby.com/core/config"
-	"euromoby.com/smsgw/internal/billing"
-	"euromoby.com/smsgw/internal/inbound"
-	ohg "euromoby.com/smsgw/internal/outbound/handlers/group"
-	ohm "euromoby.com/smsgw/internal/outbound/handlers/message"
-	ohs "euromoby.com/smsgw/internal/outbound/handlers/send"
-	osg "euromoby.com/smsgw/internal/outbound/services/group"
-	osm "euromoby.com/smsgw/internal/outbound/services/message"
-	oss "euromoby.com/smsgw/internal/outbound/services/send"
-	"euromoby.com/smsgw/internal/users"
+	coreconfig "github.com/Lameaux/core/config"
+	"github.com/Lameaux/smsgw/internal/billing"
+	"github.com/Lameaux/smsgw/internal/inbound"
+	ohg "github.com/Lameaux/smsgw/internal/outbound/handlers/group"
+	ohm "github.com/Lameaux/smsgw/internal/outbound/handlers/message"
+	ohs "github.com/Lameaux/smsgw/internal/outbound/handlers/send"
+	osg "github.com/Lameaux/smsgw/internal/outbound/services/group"
+	osm "github.com/Lameaux/smsgw/internal/outbound/services/message"
+	oss "github.com/Lameaux/smsgw/internal/outbound/services/send"
+	"github.com/Lameaux/smsgw/internal/users"
 	"github.com/gin-gonic/gin"
 
-	coremiddlewares "euromoby.com/core/middlewares"
-	"euromoby.com/smsgw/internal/config"
-	ih "euromoby.com/smsgw/internal/index/handlers"
-	"euromoby.com/smsgw/internal/middlewares"
-	"euromoby.com/smsgw/internal/providers/callbacks/sandbox"
+	coremiddlewares "github.com/Lameaux/core/middlewares"
+	"github.com/Lameaux/smsgw/internal/config"
+	ih "github.com/Lameaux/smsgw/internal/index/handlers"
+	"github.com/Lameaux/smsgw/internal/middlewares"
+	"github.com/Lameaux/smsgw/internal/providers/callbacks/sandbox"
 )
 
 func Gin(app *config.App) *gin.Engine { //nolint:funlen

@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"euromoby.com/smsgw/internal/config"
+	"github.com/Lameaux/smsgw/internal/config"
 )
 
 var TestApp *config.App //nolint:gochecknoglobals

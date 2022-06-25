@@ -1,8 +1,8 @@
 package billing
 
 import (
-	"euromoby.com/core/logger"
-	om "euromoby.com/smsgw/internal/outbound/models"
+	"github.com/Lameaux/core/logger"
+	om "github.com/Lameaux/smsgw/internal/outbound/models"
 )
 
 type StubBilling struct {

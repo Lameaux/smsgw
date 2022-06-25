@@ -1,6 +1,6 @@
 linters-settings:
   goimports:
-    local-prefixes: euromoby.com/smsgw
+    local-prefixes: github.com/Lameaux/smsgw
 
   golint:
     min-confidence: 0

@@ -5,8 +5,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"euromoby.com/core/logger"
-	"euromoby.com/smsgw/internal/config"
+	"github.com/Lameaux/core/logger"
+	"github.com/Lameaux/smsgw/internal/config"
 )
 
 func main() {

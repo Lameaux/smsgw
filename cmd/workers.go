@@ -2,20 +2,20 @@ package main
 
 import (
 	"context"
-	"euromoby.com/smsgw/internal/billing"
-	"euromoby.com/smsgw/internal/notifications"
-	nm "euromoby.com/smsgw/internal/notifications/models"
-	op "euromoby.com/smsgw/internal/outbound/processors"
-	ow "euromoby.com/smsgw/internal/outbound/workers"
+	"github.com/Lameaux/smsgw/internal/billing"
+	"github.com/Lameaux/smsgw/internal/notifications"
+	nm "github.com/Lameaux/smsgw/internal/notifications/models"
+	op "github.com/Lameaux/smsgw/internal/outbound/processors"
+	ow "github.com/Lameaux/smsgw/internal/outbound/workers"
 
 	"golang.org/x/sync/errgroup"
 
-	"euromoby.com/core/logger"
-	"euromoby.com/smsgw/internal/config"
-	"euromoby.com/smsgw/internal/notifications/notifiers"
-	"euromoby.com/smsgw/internal/providers/connectors"
+	"github.com/Lameaux/core/logger"
+	"github.com/Lameaux/smsgw/internal/config"
+	"github.com/Lameaux/smsgw/internal/notifications/notifiers"
+	"github.com/Lameaux/smsgw/internal/providers/connectors"
 
-	coreworkers "euromoby.com/core/workers"
+	coreworkers "github.com/Lameaux/core/workers"
 )
 
 var (

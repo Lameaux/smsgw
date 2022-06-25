@@ -1,14 +1,14 @@
 package inbound
 
 import (
-	corerepos "euromoby.com/core/repos"
-	"euromoby.com/smsgw/internal/config"
-	"euromoby.com/smsgw/internal/users"
+	corerepos "github.com/Lameaux/core/repos"
+	"github.com/Lameaux/smsgw/internal/config"
+	"github.com/Lameaux/smsgw/internal/users"
 
-	"euromoby.com/smsgw/internal/inbound/models"
+	"github.com/Lameaux/smsgw/internal/inbound/models"
 
-	"euromoby.com/smsgw/internal/notifications"
-	nm "euromoby.com/smsgw/internal/notifications/models"
+	"github.com/Lameaux/smsgw/internal/notifications"
+	nm "github.com/Lameaux/smsgw/internal/notifications/models"
 )
 
 type Service struct {

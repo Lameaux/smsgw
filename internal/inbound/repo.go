@@ -2,16 +2,16 @@ package inbound
 
 import (
 	"errors"
-	commonrepos "euromoby.com/smsgw/internal/common/repos"
+	commonrepos "github.com/Lameaux/smsgw/internal/common/repos"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgconn"
 
-	"euromoby.com/core/db"
-	"euromoby.com/smsgw/internal/inbound/models"
+	"github.com/Lameaux/core/db"
+	"github.com/Lameaux/smsgw/internal/inbound/models"
 
-	coremodels "euromoby.com/core/models"
-	corerepos "euromoby.com/core/repos"
+	coremodels "github.com/Lameaux/core/models"
+	corerepos "github.com/Lameaux/core/repos"
 )
 
 const (

@@ -1,14 +1,14 @@
 package message
 
 import (
-	commonrepos "euromoby.com/smsgw/internal/common/repos"
-	"euromoby.com/smsgw/internal/outbound/inputs/message"
-	"euromoby.com/smsgw/internal/outbound/models"
+	commonrepos "github.com/Lameaux/smsgw/internal/common/repos"
+	"github.com/Lameaux/smsgw/internal/outbound/inputs/message"
+	"github.com/Lameaux/smsgw/internal/outbound/models"
 	sq "github.com/Masterminds/squirrel"
 
-	"euromoby.com/core/db"
-	coremodels "euromoby.com/core/models"
-	corerepos "euromoby.com/core/repos"
+	"github.com/Lameaux/core/db"
+	coremodels "github.com/Lameaux/core/models"
+	corerepos "github.com/Lameaux/core/repos"
 )
 
 const (

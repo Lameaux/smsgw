@@ -1,6 +1,6 @@
 package billing
 
-import om "euromoby.com/smsgw/internal/outbound/models"
+import om "github.com/Lameaux/smsgw/internal/outbound/models"
 
 type Billing interface {
 	CheckBalance(merchantID string) error

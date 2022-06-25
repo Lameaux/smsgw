@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"euromoby.com/core/logger"
-	"euromoby.com/smsgw/internal/config"
-	"euromoby.com/smsgw/internal/routes"
+	"github.com/Lameaux/core/logger"
+	"github.com/Lameaux/smsgw/internal/config"
+	"github.com/Lameaux/smsgw/internal/routes"
 )
 
 const serverShutdownTimeout = 5 * time.Second

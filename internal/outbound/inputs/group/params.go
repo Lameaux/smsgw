@@ -1,6 +1,6 @@
 package group
 
-import commoninputs "euromoby.com/smsgw/internal/common/inputs"
+import commoninputs "github.com/Lameaux/smsgw/internal/common/inputs"
 
 type Params struct {
 	MerchantID string

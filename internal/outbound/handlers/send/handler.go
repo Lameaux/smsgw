@@ -3,18 +3,18 @@ package send
 import (
 	"encoding/json"
 	"errors"
-	"euromoby.com/smsgw/internal/billing"
-	"euromoby.com/smsgw/internal/outbound/models"
+	"github.com/Lameaux/smsgw/internal/billing"
+	"github.com/Lameaux/smsgw/internal/outbound/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
-	"euromoby.com/core/views"
-	"euromoby.com/smsgw/internal/middlewares"
-	ois "euromoby.com/smsgw/internal/outbound/inputs/send"
-	oss "euromoby.com/smsgw/internal/outbound/services/send"
+	"github.com/Lameaux/core/views"
+	"github.com/Lameaux/smsgw/internal/middlewares"
+	ois "github.com/Lameaux/smsgw/internal/outbound/inputs/send"
+	oss "github.com/Lameaux/smsgw/internal/outbound/services/send"
 
-	coremodels "euromoby.com/core/models"
+	coremodels "github.com/Lameaux/core/models"
 )
 
 type Handler struct {

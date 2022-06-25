@@ -6,9 +6,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"euromoby.com/smsgw/internal/outbound/models"
+	"github.com/Lameaux/smsgw/internal/outbound/models"
 
-	coremodels "euromoby.com/core/models"
+	coremodels "github.com/Lameaux/core/models"
 )
 
 func TestRepo_Save(t *testing.T) {

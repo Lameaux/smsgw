@@ -1,11 +1,11 @@
 package models
 
 import (
-	im "euromoby.com/smsgw/internal/inbound/models"
-	om "euromoby.com/smsgw/internal/outbound/models"
+	im "github.com/Lameaux/smsgw/internal/inbound/models"
+	om "github.com/Lameaux/smsgw/internal/outbound/models"
 	"time"
 
-	coremodels "euromoby.com/core/models"
+	coremodels "github.com/Lameaux/core/models"
 )
 
 type DeliveryNotification struct {

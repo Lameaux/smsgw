@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	"euromoby.com/core/logger"
-	coremodels "euromoby.com/core/models"
-	"euromoby.com/smsgw/internal/config"
+	"github.com/Lameaux/core/logger"
+	coremodels "github.com/Lameaux/core/models"
+	"github.com/Lameaux/smsgw/internal/config"
 )
 
 const (

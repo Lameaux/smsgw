@@ -1,13 +1,13 @@
 package handlers
 
 import (
-	commoninputs "euromoby.com/smsgw/internal/common/inputs"
+	commoninputs "github.com/Lameaux/smsgw/internal/common/inputs"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
-	coremodels "euromoby.com/core/models"
-	"euromoby.com/core/utils"
+	coremodels "github.com/Lameaux/core/models"
+	"github.com/Lameaux/core/utils"
 )
 
 const (

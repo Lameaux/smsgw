@@ -2,17 +2,17 @@ package message
 
 import (
 	"errors"
-	commonhandlers "euromoby.com/smsgw/internal/common/handlers"
+	commonhandlers "github.com/Lameaux/smsgw/internal/common/handlers"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
-	coremodels "euromoby.com/core/models"
-	"euromoby.com/core/views"
-	"euromoby.com/smsgw/internal/middlewares"
-	oim "euromoby.com/smsgw/internal/outbound/inputs/message"
-	"euromoby.com/smsgw/internal/outbound/models"
-	osm "euromoby.com/smsgw/internal/outbound/services/message"
+	coremodels "github.com/Lameaux/core/models"
+	"github.com/Lameaux/core/views"
+	"github.com/Lameaux/smsgw/internal/middlewares"
+	oim "github.com/Lameaux/smsgw/internal/outbound/inputs/message"
+	"github.com/Lameaux/smsgw/internal/outbound/models"
+	osm "github.com/Lameaux/smsgw/internal/outbound/services/message"
 )
 
 type Handler struct {

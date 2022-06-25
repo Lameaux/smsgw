@@ -1,10 +1,10 @@
 package connectors
 
 import (
-	"euromoby.com/core/logger"
-	"euromoby.com/smsgw/internal/config"
+	"github.com/Lameaux/core/logger"
+	"github.com/Lameaux/smsgw/internal/config"
 
-	coremodels "euromoby.com/core/models"
+	coremodels "github.com/Lameaux/core/models"
 )
 
 type SendMessageRequest struct {

@@ -1,9 +1,9 @@
 package notifications
 
 import (
-	"euromoby.com/core/db"
-	"euromoby.com/smsgw/internal/notifications/models"
-	"euromoby.com/smsgw/internal/notifications/notifiers"
+	"github.com/Lameaux/core/db"
+	"github.com/Lameaux/smsgw/internal/notifications/models"
+	"github.com/Lameaux/smsgw/internal/notifications/notifiers"
 )
 
 type Processor interface {

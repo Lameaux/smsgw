@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"euromoby.com/smsgw/internal/users"
+	"github.com/Lameaux/smsgw/internal/users"
 )
 
 const (

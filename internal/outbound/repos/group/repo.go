@@ -2,16 +2,16 @@ package group
 
 import (
 	"errors"
-	commonrepos "euromoby.com/smsgw/internal/common/repos"
-	"euromoby.com/smsgw/internal/outbound/inputs/group"
+	commonrepos "github.com/Lameaux/smsgw/internal/common/repos"
+	"github.com/Lameaux/smsgw/internal/outbound/inputs/group"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgconn"
 
-	"euromoby.com/core/db"
-	corerepos "euromoby.com/core/repos"
+	"github.com/Lameaux/core/db"
+	corerepos "github.com/Lameaux/core/repos"
 
-	"euromoby.com/smsgw/internal/outbound/models"
+	"github.com/Lameaux/smsgw/internal/outbound/models"
 )
 
 type Repo struct {

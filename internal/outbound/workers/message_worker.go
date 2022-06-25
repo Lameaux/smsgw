@@ -2,21 +2,21 @@ package workers
 
 import (
 	"errors"
-	"euromoby.com/smsgw/internal/billing"
-	"euromoby.com/smsgw/internal/notifications"
+	"github.com/Lameaux/smsgw/internal/billing"
+	"github.com/Lameaux/smsgw/internal/notifications"
 	"time"
 
-	"euromoby.com/core/db"
-	"euromoby.com/core/logger"
-	"euromoby.com/smsgw/internal/config"
-	nm "euromoby.com/smsgw/internal/notifications/models"
-	"euromoby.com/smsgw/internal/outbound/models"
-	org "euromoby.com/smsgw/internal/outbound/repos/group"
-	orm "euromoby.com/smsgw/internal/outbound/repos/message"
-	"euromoby.com/smsgw/internal/providers/connectors"
+	"github.com/Lameaux/core/db"
+	"github.com/Lameaux/core/logger"
+	"github.com/Lameaux/smsgw/internal/config"
+	nm "github.com/Lameaux/smsgw/internal/notifications/models"
+	"github.com/Lameaux/smsgw/internal/outbound/models"
+	org "github.com/Lameaux/smsgw/internal/outbound/repos/group"
+	orm "github.com/Lameaux/smsgw/internal/outbound/repos/message"
+	"github.com/Lameaux/smsgw/internal/providers/connectors"
 
-	coremodels "euromoby.com/core/models"
-	corerepos "euromoby.com/core/repos"
+	coremodels "github.com/Lameaux/core/models"
+	corerepos "github.com/Lameaux/core/repos"
 )
 
 const (

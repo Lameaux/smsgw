@@ -1,9 +1,9 @@
 package billing_test
 
 import (
-	coremodels "euromoby.com/core/models"
-	"euromoby.com/smsgw/internal/billing"
-	om "euromoby.com/smsgw/internal/outbound/models"
+	coremodels "github.com/Lameaux/core/models"
+	"github.com/Lameaux/smsgw/internal/billing"
+	om "github.com/Lameaux/smsgw/internal/outbound/models"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

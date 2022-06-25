@@ -1,8 +1,8 @@
 package outputs
 
 import (
-	"euromoby.com/smsgw/internal/outbound/models"
 	"fmt"
+	"github.com/Lameaux/smsgw/internal/outbound/models"
 )
 
 type MessageView struct {

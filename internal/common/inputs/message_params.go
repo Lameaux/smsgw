@@ -1,6 +1,6 @@
 package inputs
 
-import coremodels "euromoby.com/core/models"
+import coremodels "github.com/Lameaux/core/models"
 
 type MessageParams struct {
 	MSISDN *coremodels.MSISDN

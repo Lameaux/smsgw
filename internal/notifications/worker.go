@@ -2,15 +2,15 @@ package notifications
 
 import (
 	"errors"
-	"euromoby.com/smsgw/internal/notifications/models"
+	"github.com/Lameaux/smsgw/internal/notifications/models"
 	"time"
 
-	"euromoby.com/core/db"
-	"euromoby.com/core/logger"
-	coremodels "euromoby.com/core/models"
-	corerepos "euromoby.com/core/repos"
-	"euromoby.com/smsgw/internal/config"
-	"euromoby.com/smsgw/internal/notifications/notifiers"
+	"github.com/Lameaux/core/db"
+	"github.com/Lameaux/core/logger"
+	coremodels "github.com/Lameaux/core/models"
+	corerepos "github.com/Lameaux/core/repos"
+	"github.com/Lameaux/smsgw/internal/config"
+	"github.com/Lameaux/smsgw/internal/notifications/notifiers"
 )
 
 const (
