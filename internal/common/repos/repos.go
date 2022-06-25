@@ -3,10 +3,10 @@ package repos
 import (
 	sq "github.com/Masterminds/squirrel"
 
-	"euromoby.com/smsgw/internal/inputs"
+	commoninputs "euromoby.com/smsgw/internal/common/inputs"
 )
 
-func AppendMessageParams(q *inputs.MessageParams, sb sq.SelectBuilder) sq.SelectBuilder {
+func AppendMessageParams(q *commoninputs.MessageParams, sb sq.SelectBuilder) sq.SelectBuilder {
 	if q.MSISDN != nil {
 		sb = sb.Where("msisdn = ?", q.MSISDN)
 	}
@@ -18,7 +18,7 @@ func AppendMessageParams(q *inputs.MessageParams, sb sq.SelectBuilder) sq.Select
 	return sb
 }
 
-func AppendSearchParams(q *inputs.SearchParams, sb sq.SelectBuilder) sq.SelectBuilder {
+func AppendSearchParams(q *commoninputs.SearchParams, sb sq.SelectBuilder) sq.SelectBuilder {
 	if q.CreatedAtFrom != nil {
 		sb = sb.Where("created_at >= ?", q.CreatedAtFrom)
 	}

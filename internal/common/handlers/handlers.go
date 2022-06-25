@@ -1,13 +1,13 @@
 package handlers
 
 import (
+	commoninputs "euromoby.com/smsgw/internal/common/inputs"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
 	coremodels "euromoby.com/core/models"
 	"euromoby.com/core/utils"
-	"euromoby.com/smsgw/internal/inputs"
 )
 
 const (
@@ -42,7 +42,7 @@ func QueryParamTime(c *gin.Context, param string) (*time.Time, error) {
 	return &t, nil
 }
 
-func CommonSearchParams(c *gin.Context) (*inputs.SearchParams, error) {
+func CommonSearchParams(c *gin.Context) (*commoninputs.SearchParams, error) {
 	offset, err := QueryParamUint64Default(c, "offset", 0)
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func CommonSearchParams(c *gin.Context) (*inputs.SearchParams, error) {
 		return nil, err
 	}
 
-	p := inputs.SearchParams{
+	p := commoninputs.SearchParams{
 		Offset:        offset,
 		Limit:         limit,
 		CreatedAtFrom: createdAtFrom,
@@ -73,8 +73,8 @@ func CommonSearchParams(c *gin.Context) (*inputs.SearchParams, error) {
 	return &p, nil
 }
 
-func MessageSearchParams(c *gin.Context) (*inputs.MessageParams, error) {
-	p := inputs.MessageParams{}
+func MessageSearchParams(c *gin.Context) (*commoninputs.MessageParams, error) {
+	p := commoninputs.MessageParams{}
 
 	if msisdn := c.Query("msisdn"); msisdn != "" {
 		normalized, err := coremodels.NormalizeMSISDN(msisdn)

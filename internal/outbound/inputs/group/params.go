@@ -1,6 +1,6 @@
 package group
 
-import "euromoby.com/smsgw/internal/inputs"
+import commoninputs "euromoby.com/smsgw/internal/common/inputs"
 
 type Params struct {
 	MerchantID string
@@ -8,7 +8,7 @@ type Params struct {
 }
 
 type SearchParams struct {
-	*inputs.SearchParams
+	*commoninputs.SearchParams
 
 	MerchantID          string
 	ClientTransactionID *string

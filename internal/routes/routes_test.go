@@ -25,18 +25,15 @@ func TestGin(t *testing.T) {
 
 		{"POST", "/v1/sms/messages", http.StatusForbidden},
 
-		{"GET", "/v1/sms/messages/status/1", http.StatusForbidden},
-		{"GET", "/v1/sms/messages/status/search", http.StatusForbidden},
+		{"GET", "/v1/sms/messages/group/1", http.StatusForbidden},
+		{"GET", "/v1/sms/messages/group/search", http.StatusForbidden},
 
 		{"GET", "/v1/sms/messages/outbound/1", http.StatusForbidden},
 		{"GET", "/v1/sms/messages/outbound/search", http.StatusForbidden},
 
-		{"GET", "/v1/sms/messages/inbound/9999/1", http.StatusForbidden},
-		{"GET", "/v1/sms/messages/inbound/9999/search", http.StatusForbidden},
-
-		{"GET", "/v1/sms/callbacks/outbound", http.StatusForbidden},
-		{"POST", "/v1/sms/callbacks/outbound", http.StatusForbidden},
-		{"DELETE", "/v1/sms/callbacks/outbound/1", http.StatusForbidden},
+		{"GET", "/v1/sms/messages/inbound/1", http.StatusForbidden},
+		{"PUT", "/v1/sms/messages/inbound/1/ack", http.StatusForbidden},
+		{"GET", "/v1/sms/messages/inbound/search", http.StatusForbidden},
 	}
 
 	for _, tt := range tests {

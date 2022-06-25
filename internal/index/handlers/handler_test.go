@@ -7,8 +7,8 @@ import (
 	"testing"
 )
 
-func TestIndexHandler(t *testing.T) {
-	h := NewIndexHandler()
+func TestHandler(t *testing.T) {
+	h := NewHandler()
 
 	recorder := testhelpers.PerformAnonRequest(h.Index, http.MethodGet, "/", nil)
 
@@ -16,12 +16,12 @@ func TestIndexHandler(t *testing.T) {
 		t.Errorf("Handler returned wrong status code. Expected: %d. Got: %d.", http.StatusOK, status)
 	}
 
-	var indexResponse IndexResponse
-	if err := json.NewDecoder(recorder.Body).Decode(&indexResponse); err != nil {
+	var response Response
+	if err := json.NewDecoder(recorder.Body).Decode(&response); err != nil {
 		t.Errorf("Error decoding response body: %v", err)
 	}
 
-	if indexResponse.Health != "OK" {
+	if response.Health != "OK" {
 		t.Errorf("App is not healthy")
 	}
 }

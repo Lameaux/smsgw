@@ -31,7 +31,7 @@ func (b *StubBilling) CheckBalance(merchantID string) error {
 	return nil
 }
 
-func (b *StubBilling) ChargeOutboundMessage(message *om.Message) error {
+func (b *StubBilling) Charge(message *om.Message) error {
 	if b.Paid[message.ID] {
 		return nil
 	}

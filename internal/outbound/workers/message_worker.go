@@ -118,7 +118,7 @@ func (w *MessageWorker) sendToProvider(messageGroup *models.MessageGroup, messag
 	providerID := connector.Name()
 	message.ProviderID = &providerID
 
-	if err := w.b.ChargeOutboundMessage(message); err != nil {
+	if err := w.b.Charge(message); err != nil {
 		w.handleFailure(message, nil, err)
 
 		return

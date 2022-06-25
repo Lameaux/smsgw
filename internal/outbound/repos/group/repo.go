@@ -2,8 +2,8 @@ package group
 
 import (
 	"errors"
+	commonrepos "euromoby.com/smsgw/internal/common/repos"
 	"euromoby.com/smsgw/internal/outbound/inputs/group"
-	"euromoby.com/smsgw/internal/repos"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgconn"
@@ -81,7 +81,7 @@ func (r *Repo) FindByQuery(q *group.SearchParams) ([]*models.MessageGroup, error
 		sb = sb.Where("client_transaction_id = ?", q.ClientTransactionID)
 	}
 
-	sb = repos.AppendSearchParams(q.SearchParams, sb)
+	sb = commonrepos.AppendSearchParams(q.SearchParams, sb)
 
 	var groups []*models.MessageGroup
 	err := corerepos.DBQueryAll(r.db, &groups, sb)

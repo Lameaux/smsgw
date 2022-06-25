@@ -1,6 +1,7 @@
 package routes
 
 import (
+	coreconfig "euromoby.com/core/config"
 	"euromoby.com/smsgw/internal/billing"
 	"euromoby.com/smsgw/internal/inbound"
 	ohg "euromoby.com/smsgw/internal/outbound/handlers/group"
@@ -14,16 +15,24 @@ import (
 
 	coremiddlewares "euromoby.com/core/middlewares"
 	"euromoby.com/smsgw/internal/config"
-	"euromoby.com/smsgw/internal/handlers"
+	ih "euromoby.com/smsgw/internal/index/handlers"
 	"euromoby.com/smsgw/internal/middlewares"
 	"euromoby.com/smsgw/internal/providers/callbacks/sandbox"
 )
 
 func Gin(app *config.App) *gin.Engine { //nolint:funlen
 	r := gin.Default()
+
+	switch app.Config.Env {
+	case coreconfig.EnvTest:
+		gin.SetMode(gin.TestMode)
+	case coreconfig.EnvProduction:
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	r.Use(coremiddlewares.Timeout(app.Config.WaitTimeout))
 
-	i := handlers.NewIndexHandler()
+	i := ih.NewHandler()
 
 	r.GET("/", i.Index)
 	r.GET("/health", i.Index)

@@ -9,18 +9,16 @@ import (
 )
 
 var tables = []string{ //nolint:gochecknoglobals
+	"merchants",
 	"message_groups",
 	"outbound_messages",
 	"inbound_messages",
 	"delivery_notifications",
-	"keys",
-	"shortcodes",
-	"callbacks",
 }
 
 const (
 	AppName    = "smsgw"
-	AppVersion = "0.2"
+	AppVersion = "0.3"
 
 	defaultWorkerSleep = 5
 )

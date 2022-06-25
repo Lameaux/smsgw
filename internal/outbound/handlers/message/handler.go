@@ -2,7 +2,7 @@ package message
 
 import (
 	"errors"
-	"euromoby.com/smsgw/internal/handlers"
+	commonhandlers "euromoby.com/smsgw/internal/common/handlers"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -66,12 +66,12 @@ func params(c *gin.Context) *oim.Params {
 }
 
 func searchParams(c *gin.Context) (*oim.SearchParams, error) {
-	sp, err := handlers.CommonSearchParams(c)
+	sp, err := commonhandlers.CommonSearchParams(c)
 	if err != nil {
 		return nil, err
 	}
 
-	mp, err := handlers.MessageSearchParams(c)
+	mp, err := commonhandlers.MessageSearchParams(c)
 	if err != nil {
 		return nil, err
 	}

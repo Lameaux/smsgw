@@ -8,20 +8,20 @@ import (
 	"euromoby.com/smsgw/internal/config"
 )
 
-type IndexHandler struct{}
+type Handler struct{}
 
-type IndexResponse struct {
+type Response struct {
 	AppName    string
 	AppVersion string
 	Health     string
 }
 
-func NewIndexHandler() *IndexHandler {
-	return &IndexHandler{}
+func NewHandler() *Handler {
+	return &Handler{}
 }
 
-func (i *IndexHandler) Index(c *gin.Context) {
-	c.JSON(http.StatusOK, IndexResponse{
+func (i *Handler) Index(c *gin.Context) {
+	c.JSON(http.StatusOK, Response{
 		AppName:    config.AppName,
 		AppVersion: config.AppVersion,
 		Health:     "OK",

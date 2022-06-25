@@ -1,9 +1,9 @@
 package message
 
 import (
+	commonrepos "euromoby.com/smsgw/internal/common/repos"
 	"euromoby.com/smsgw/internal/outbound/inputs/message"
 	"euromoby.com/smsgw/internal/outbound/models"
-	"euromoby.com/smsgw/internal/repos"
 	sq "github.com/Masterminds/squirrel"
 
 	"euromoby.com/core/db"
@@ -115,8 +115,8 @@ func (r *Repo) FindByProviderAndMessageID(providerID, messageID string) (*models
 func (r *Repo) FindByQuery(q *message.SearchParams) ([]*models.Message, error) {
 	sb := selectBase().Where("merchant_id = ?", q.MerchantID)
 
-	sb = repos.AppendMessageParams(q.MessageParams, sb)
-	sb = repos.AppendSearchParams(q.SearchParams, sb)
+	sb = commonrepos.AppendMessageParams(q.MessageParams, sb)
+	sb = commonrepos.AppendSearchParams(q.SearchParams, sb)
 
 	var messages []*models.Message
 	err := corerepos.DBQueryAll(r.db, &messages, sb)

@@ -10,7 +10,7 @@ import (
 	"euromoby.com/smsgw/internal/outbound/models"
 
 	coremodels "euromoby.com/core/models"
-	commoninputs "euromoby.com/smsgw/internal/inputs"
+	commoninputs "euromoby.com/smsgw/internal/common/inputs"
 )
 
 func TestRepo_Save(t *testing.T) {

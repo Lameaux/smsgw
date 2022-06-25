@@ -12,6 +12,6 @@ func (b *TestBilling) CheckBalance(merchantID string) error {
 	return nil
 }
 
-func (b *TestBilling) ChargeOutboundMessage(message *om.Message) error {
+func (b *TestBilling) Charge(message *om.Message) error {
 	return nil
 }

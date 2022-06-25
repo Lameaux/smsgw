@@ -2,7 +2,7 @@ package group
 
 import (
 	"errors"
-	"euromoby.com/smsgw/internal/handlers"
+	commonhandlers "euromoby.com/smsgw/internal/common/handlers"
 	"euromoby.com/smsgw/internal/outbound/models"
 	"net/http"
 
@@ -66,7 +66,7 @@ func params(c *gin.Context) *oig.Params {
 }
 
 func searchParams(c *gin.Context) (*oig.SearchParams, error) {
-	sp, err := handlers.CommonSearchParams(c)
+	sp, err := commonhandlers.CommonSearchParams(c)
 	if err != nil {
 		return nil, err
 	}

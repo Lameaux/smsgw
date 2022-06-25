@@ -1,7 +1,6 @@
 package testhelpers
 
 import (
-	"euromoby.com/smsgw/internal/config"
 	"euromoby.com/smsgw/internal/users"
 	"io"
 	"net/http/httptest"
@@ -23,7 +22,7 @@ func PerformAnonRequest(f gin.HandlerFunc, method, path string, body io.Reader, 
 	return performRequest(r, method, path, body, headers...)
 }
 
-func PerformAuthRequest(app *config.App, f gin.HandlerFunc, method, path string, body io.Reader, headers ...Header) *httptest.ResponseRecorder {
+func PerformAuthRequest(f gin.HandlerFunc, method, path string, body io.Reader, headers ...Header) *httptest.ResponseRecorder {
 	r := authRouter()
 	r.Handle(method, path, f)
 

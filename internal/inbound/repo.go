@@ -2,7 +2,7 @@ package inbound
 
 import (
 	"errors"
-	"euromoby.com/smsgw/internal/repos"
+	commonrepos "euromoby.com/smsgw/internal/common/repos"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgconn"
@@ -96,8 +96,8 @@ func (r *Repo) FindByQuery(q *SearchParams) ([]*models.Message, error) {
 		sb = sb.Where("shortcode = ?", q.Shortcode)
 	}
 
-	sb = repos.AppendMessageParams(q.MessageParams, sb)
-	sb = repos.AppendSearchParams(q.SearchParams, sb)
+	sb = commonrepos.AppendMessageParams(q.MessageParams, sb)
+	sb = commonrepos.AppendSearchParams(q.SearchParams, sb)
 
 	var messages []*models.Message
 	err := corerepos.DBQueryAll(r.db, &messages, sb)

@@ -33,7 +33,7 @@ func TestSendHandler_SendMessage(t *testing.T) {
 		t.Errorf("Error creating request body: %v", err)
 	}
 
-	recorder := testhelpers.PerformAuthRequest(app, h.SendMessage, http.MethodPost, "/", bytes.NewReader(s), testhelpers.Header{
+	recorder := testhelpers.PerformAuthRequest(h.SendMessage, http.MethodPost, "/", bytes.NewReader(s), testhelpers.Header{
 		Key:   middlewares.HeaderXApiKey,
 		Value: users.TestAPIKey,
 	})
