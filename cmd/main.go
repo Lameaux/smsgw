@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"github.com/Lameaux/core/executors"
+	"github.com/Lameaux/core/httpserver"
+	"github.com/Lameaux/smsgw/internal/routes"
 	"os/signal"
 	"syscall"
 
@@ -16,16 +19,17 @@ func main() {
 	app := config.NewApp()
 	logger.Infow("Starting", "app", config.AppName, "version", config.AppVersion)
 
-	srv := startAPIServer(app)
-	startWorkers(app)
+	srv := httpserver.Start(&app.Config, routes.Gin(app))
+	workers := makeWorkers(app)
+	workersExecutor := executors.NewExecutor(workers)
 
 	// Listen for the interrupt signal.
 	<-ctx.Done()
 	logger.Infow("the interrupt received, shutting down gracefully, press Ctrl+C again to force")
 	stop()
 
-	shutdownAPIServer(srv)
-	shutdownWorkers()
+	httpserver.Shutdown(srv, httpserver.ShutdownTimeout)
+	workersExecutor.Shutdown()
 	app.Config.Shutdown()
 
 	logger.Infow("bye")
